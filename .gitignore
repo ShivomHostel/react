@@ -1,4 +1,8 @@
 <<<<<<< HEAD
+<<<<<<< Updated upstream
+=======
+>>>>>>> main
+<<<<<<< HEAD
 # Gradle files
 .gradle/
 build/
@@ -100,3 +104,9 @@ yarn-error.log
 # testing
 /coverage
 >>>>>>> 1a3dac8 (first commit)
+<<<<<<< HEAD
+=======
+node_modules
+>>>>>>> Stashed changes
+=======
+>>>>>>> main
