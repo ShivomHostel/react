@@ -80,6 +80,11 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+<<<<<<< HEAD
+=======
+        //added for image crop library
+        vectorDrawables.useSupportLibrary = true
+>>>>>>> main
     }
     signingConfigs {
         debug {
