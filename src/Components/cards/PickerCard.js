@@ -23,7 +23,7 @@ const PickerCard = ({title, placeholder, value, setValue, items,editable,error})
           selectedValue={value}
           onValueChange={(itemValue, itemIndex) => setValue(itemValue)}>
           {placeholder && <Picker.Item label={placeholder} value="" />}
-          {items.map((item, i) => {
+          {items?.map((item, i) => {
             return (
               <Picker.Item
                 key={i}
@@ -49,6 +49,7 @@ const styles = StyleSheet.create({
   },
   inptitle: {
     fontSize: fontSize.lable,
+    fontFamily: 'Roboto-Regular',
     color: colors.black,
   },
   bax: {
@@ -70,9 +71,11 @@ const styles = StyleSheet.create({
   textstyle: {
     fontSize: fontSize.lable,
     color: colors.black,
+    fontFamily: 'Roboto-Regular',
   },
   error:{
     fontSize:moderateScale(12),
-    color:colors.red
+    color:colors.red,
+    fontFamily: 'Roboto-Regular',
   }
 });

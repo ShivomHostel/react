@@ -8,6 +8,7 @@ import Add_Expenses_Screen from '../../Screen/Add_Expenses_Screen';
 import Add_Food_Screen from '../../Screen/Add_Food_Screen';
 import Add_Registration_Screen from '../../Screen/Add_Registration_Screen';
 import DrawerNavigation from '../DrawerNavigation/DrawerNavigation';
+import Add_Item_Screen from '../../Screen/Items/Add_Item_Screen';
 
 const Tab = createBottomTabNavigator();
 
@@ -64,7 +65,7 @@ const TabNavigation = () => {
       />
       <Tab.Screen
         name="Add_Expenses"
-        component={Add_Expenses_Screen}
+        component={Add_Item_Screen}
         options={{
           tabBarLabel: 'Add Expenses',
           headerShown: false,

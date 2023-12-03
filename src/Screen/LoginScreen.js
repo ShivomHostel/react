@@ -9,12 +9,37 @@ import {
   TextInput,
   ScrollView,
 } from 'react-native';
-import React from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {colors} from '../Utils/Colors';
 import {fontSize} from '../Utils/Size';
-import { horizontalScale, verticalScale } from '../Utils/Metrics';
+import {horizontalScale, moderateScale, verticalScale} from '../Utils/Metrics';
+import {useDispatch, useSelector} from 'react-redux';
+import {loginUser} from '../Service/slices/authSlice';
+import {Picker} from '@react-native-picker/picker';
 
 const LoginScreen = ({navigation}) => {
+  const INITIAL_DATA = {
+    userType: 'admin',
+    businessName: 'Makwana Group',
+    username: '9516760054',
+    password: 'Makwana3192@',
+  };
+  const dispatch = useDispatch();
+  const status = useSelector(state => state.root.auth);
+  console.log('status', status);
+  const [userBussiness, setUserBussiness] = useState(null);
+  const [userData, setUserData] = useState(INITIAL_DATA);
+  console.log('userData:', userData);
+  const handleChange = useCallback(field => {
+    setUserData(prev => {
+      return {...prev, ...field};
+    });
+  });
+  const handleSubmit = () => {
+    dispatch(loginUser({...userData}));
+
+    // navigation.navigate('RegisterScreen');
+  };
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <StatusBar barStyle={'dark-content'} backgroundColor={colors.white} />
@@ -37,7 +62,11 @@ const LoginScreen = ({navigation}) => {
           <View style={styles.bax}>
             <TextInput
               name={'userType'}
-              placeholder="USER TYPE"
+              value={userData.userType}
+              placeholder="User Type"
+              onChangeText={text => {
+                handleChange({userType: text});
+              }}
               style={styles.inputStyle}
             />
           </View>
@@ -47,17 +76,46 @@ const LoginScreen = ({navigation}) => {
           <View style={styles.bax}>
             <TextInput
               name={'userName'}
-              placeholder="USER NAME"
+              value={userData.username}
+              placeholder="User Name"
+              onChangeText={text => {
+                handleChange({username: text});
+              }}
               style={styles.inputStyle}
             />
           </View>
         </View>
+        {
+          // <View style={styles.inputcard}>
+          //   <Text style={styles.inptitle}>USER NAME</Text>
+          //   <View style={styles.bax}>
+          //     <Picker
+          //       style={{
+          //         color: colors.txtgrey,
+          //         fontSize: moderateScale(10),
+          //         marginTop: verticalScale(-8),
+          //         marginLeft: horizontalScale(-5),
+          //       }}
+          //       selectedValue={userData.businessName}
+          //       onValueChange={(itemValue, itemIndex) => {
+          //         setUserData({businessName: itemValue});
+          //       }}>
+          //       <Picker.Item label={'Makwana'} value="Makwana " />
+          //       <Picker.Item label={'Makwana Group'} value="Makwana Group" />
+          //     </Picker>
+          //   </View>
+          // </View>
+        }
         <View style={styles.inputcard}>
           <Text style={styles.inptitle}>PASSWORD</Text>
           <View style={styles.bax}>
             <TextInput
               name={'password'}
-              placeholder="PASSWORD"
+              placeholder="Password"
+              value={userData.password}
+              onChangeText={text => {
+                handleChange({password: text});
+              }}
               style={styles.inputStyle}
             />
           </View>
@@ -66,21 +124,23 @@ const LoginScreen = ({navigation}) => {
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
-            height: 40,
+            // height: 40,
             alignItems: 'center',
           }}>
           <Text style={styles.textstyle}>GUEST LOGIN </Text>
           <Text style={styles.textstyle}>FORGOT PASSWORD ?</Text>
         </View>
 
-        <TouchableOpacity
-          onPress={() => navigation.navigate('TabNavigation')}
-          style={styles.btn}>
-          <Text style={styles.textstyle}>Login</Text>
+        <TouchableOpacity disabled={status.loading} onPress={handleSubmit} style={styles.btn}>
+          <Text style={styles.textstyle}>{status.loading?'Loading...':'Login'}</Text>
         </TouchableOpacity>
         <View style={{flexDirection: 'row', alignItems: 'center'}}>
           <Text style={styles.altext}>Already have an account?</Text>
-          <Text onPress={() => {navigation.navigate('RegisterScreen')}} style={styles.loginText}>
+          <Text
+            onPress={() => {
+              navigation.navigate('RegisterScreen');
+            }}
+            style={styles.loginText}>
             Register
           </Text>
         </View>
@@ -121,29 +181,33 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   inputcard: {
-    height: 85,
+    height: verticalScale(75),
     gap: 10,
   },
   inptitle: {
     fontSize: fontSize.lable,
     color: colors.black,
+    fontFamily: 'Roboto-Regular',
+
   },
   bax: {
     width: '100%',
-    height: 50,
+    height: verticalScale(45),
     backgroundColor: '#fff',
   },
   inputStyle: {
     height: '100%',
     color: colors.txtgrey,
-    fontSize: 12,
+    fontSize: moderateScale(16),
     width: '100%',
     paddingLeft: 12,
     borderWidth: 1,
     borderColor: colors.white,
+    textTransform: 'lowercase',
+    fontFamily: 'Roboto-Regular',
   },
   btn: {
-    height: 60,
+    height: verticalScale(50),
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -153,15 +217,18 @@ const styles = StyleSheet.create({
   textstyle: {
     fontSize: fontSize.lable,
     color: colors.black,
+    fontFamily: 'Roboto-Regular',
   },
   altext: {
     color: '#000',
-    fontSize: 16,
+    fontSize: moderateScale(16),
+    fontFamily: 'Roboto-Regular',
     marginVertical: verticalScale(5),
   },
   loginText: {
     color: '#000',
-    fontSize: 18,
+    fontSize: moderateScale(18),
+    fontFamily: 'Roboto-Regular',
     marginHorizontal: horizontalScale(10),
   },
 });

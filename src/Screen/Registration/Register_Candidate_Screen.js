@@ -20,8 +20,7 @@ import Rooms_Form from '../../Components/Rooms_Form';
 import Main_Header from '../../Components/headers/Main_Header';
 
 const Register_Candidate_Screen = ({navigation}) => {
-
-  const [statsType,setStatsType]=useState(null)
+  const [statsType, setStatsType] = useState(null);
 
   const Render_Add_btn = ({handleNavigation}) => {
     return (
@@ -30,6 +29,60 @@ const Register_Candidate_Screen = ({navigation}) => {
           <Icon name={'plus'} size={30} color={colors.white} />
         </TouchableOpacity>
       </View>
+    );
+  };
+
+  const Queue_Reg = ({item}) => {
+    return (
+      <Card>
+        <View style={{}}>
+          <View
+            style={[styles.flexRowWithGap, {justifyContent: 'space-between'}]}>
+            <View style={{width: '70%'}}>
+              <Text style={styles.room_num}>{item.name}</Text>
+              <Text style={{color: colors.grey, fontSize: 14}}>8895841585</Text>
+            </View>
+            <View style={{width: '30%', alignItems: 'center'}}>
+              <Text
+                numberOfLines={1}
+                style={[styles.room_num, {color: colors.AppDefaultColor}]}>
+                {item.roomNo}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.flexRowWithGap}>
+            <Text style={{fontSize: 14, color: 'grey'}}>raj@gmail.com</Text>
+          </View>
+          <View
+            style={[
+              styles.flexRowWithGap,
+              {
+                justifyContent: 'flex-end',
+                borderTopWidth: 1,
+                gap: horizontalScale(15),
+                borderTopColor: colors.lightygrey,
+                paddingTop: verticalScale(12),
+              },
+            ]}>
+            <TouchableOpacity>
+              <Icon name={'user-lock'} color={colors.black} size={20} />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Icon name={'user-plus'} color={colors.black} size={20} />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Icon name={'trash-can'} color={colors.red} size={20} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Registartion_View')}>
+              <Icon name={'file-pdf'} color={colors.green} size={20} />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Icon name={'rotate'} color={colors.black} size={20} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Card>
     );
   };
 
@@ -44,11 +97,15 @@ const Register_Candidate_Screen = ({navigation}) => {
               <Text style={{color: colors.grey, fontSize: 14}}>8895841585</Text>
             </View>
             <View style={{width: '30%', alignItems: 'center'}}>
-              <Text style={[styles.room_num, {color: colors.AppDefaultColor}]}>
+              <Text
+                numberOfLines={1}
+                style={[styles.room_num, {color: colors.AppDefaultColor}]}>
                 {item.roomNo}
               </Text>
-              <Text style={[{color: colors.grey, fontSize: 14}]}>
-                Triple sharing
+              <Text
+                numberOfLines={1}
+                style={[{color: colors.grey, fontSize: 14, width: '100%'}]}>
+                Tenure - 60 Days
               </Text>
               <View style={[styles.flexRowWithGap, {gap: 5}]}>
                 <Text style={{fontSize: 14, color: 'grey'}}>Rent:</Text>
@@ -121,7 +178,7 @@ const Register_Candidate_Screen = ({navigation}) => {
     return (
       <View
         style={{
-          width: width, 
+          width: width,
           alignItems: 'center',
           justifyContent: 'center',
         }}>
@@ -138,112 +195,126 @@ const Register_Candidate_Screen = ({navigation}) => {
                   paddingHorizontal: horizontalScale(20),
                   paddingVertical: verticalScale(10),
                 }}>
-                <Card>
-                  <View style={{}}>
-                    <View
-                      style={[
-                        styles.flexRowWithGap,
-                        {justifyContent: 'space-between'},
-                      ]}>
-                      <View style={{width: '70%'}}>
-                        <Text style={styles.room_num}>{item.name}</Text>
-                        <Text style={{color: colors.grey, fontSize: 14}}>
-                          8895841585
-                        </Text>
-                      </View>
-                      <View style={{width: '30%', alignItems: 'center'}}>
-                        <Text
-                          style={[
-                            styles.room_num,
-                            {color: colors.AppDefaultColor},
-                          ]}>
-                          {item.roomNo}
-                        </Text>
-                        <Text style={[{color: colors.grey, fontSize: 14}]}>
-                          Triple sharing
-                        </Text>
-                        <View style={[styles.flexRowWithGap, {gap: 5}]}>
-                          <Text style={{fontSize: 14, color: 'grey'}}>
-                            Rent:
-                          </Text>
-                          <Text style={{fontSize: 14, color: 'grey'}}>
-                            ₹8000
+                {statsType === 'old_reg' ? (
+                  <Old_Registrations item={item} />
+                ) : statsType === 'queue_reg' ? (
+                  <Queue_Reg item={item} />
+                ) : (
+                  <Card>
+                    <View style={{}}>
+                      <View
+                        style={[
+                          styles.flexRowWithGap,
+                          {justifyContent: 'space-between'},
+                        ]}>
+                        <View style={{width: '70%'}}>
+                          <Text style={styles.room_num}>{item.name}</Text>
+                          <Text style={{color: colors.grey, fontSize: 14}}>
+                            8895841585
                           </Text>
                         </View>
+                        <View style={{width: '30%', alignItems: 'center'}}>
+                          <Text
+                            style={[
+                              styles.room_num,
+                              {color: colors.AppDefaultColor},
+                            ]}>
+                            {item.roomNo}
+                          </Text>
+                          <Text style={[{color: colors.grey, fontSize: 14}]}>
+                            Triple sharing
+                          </Text>
+                          <View style={[styles.flexRowWithGap, {gap: 5}]}>
+                            <Text style={{fontSize: 14, color: 'grey'}}>
+                              Rent:
+                            </Text>
+                            <Text style={{fontSize: 14, color: 'grey'}}>
+                              ₹8000
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                      {/* <View> */}
+                      <View style={styles.flexRowWithGap}>
+                        <Text style={{fontSize: 14, color: 'grey'}}>
+                          Reg Date:
+                        </Text>
+                        <Text style={{fontSize: 14, color: 'grey'}}>
+                          22/11/2023
+                        </Text>
+                      </View>
+                      <View style={styles.flexRowWithGap}>
+                        <Text style={{fontSize: 14, color: 'grey'}}>
+                          Reg No: {item?.seatNo}
+                        </Text>
+                      </View>
+                      <View
+                        style={[
+                          styles.flexRowWithGap,
+                          {width: '100%', justifyContent: 'space-between'},
+                        ]}>
+                        <Text style={{fontSize: 14, color: 'grey'}}>
+                          Seat No: {item?.seatNo}
+                        </Text>
+                        {/* <View style={styles.flexRowWithGap}> */}
+                        <Text style={{fontSize: 14, color: colors.grey}}>
+                          Fee: ${item.roomRent}
+                        </Text>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.flexRowWithGap,
+                          {
+                            justifyContent: 'flex-end',
+                            borderTopWidth: 1,
+                            gap: horizontalScale(15),
+                            borderTopColor: colors.lightygrey,
+                            paddingTop: verticalScale(12),
+                          },
+                        ]}>
+                        <TouchableOpacity>
+                          <Icon
+                            name={'user-lock'}
+                            color={colors.black}
+                            size={20}
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity>
+                          <Icon
+                            name={'user-plus'}
+                            color={colors.black}
+                            size={20}
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity>
+                          <Icon
+                            name={'trash-can'}
+                            color={colors.red}
+                            size={20}
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() =>
+                            navigation.navigate('Registartion_View')
+                          }>
+                          <Icon
+                            name={'file-pdf'}
+                            color={colors.green}
+                            size={20}
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity>
+                          <Icon
+                            name={'rotate'}
+                            color={colors.black}
+                            size={20}
+                          />
+                        </TouchableOpacity>
                       </View>
                     </View>
-                    {/* <View> */}
-                    <View style={styles.flexRowWithGap}>
-                      <Text style={{fontSize: 14, color: 'grey'}}>
-                        Room Date:
-                      </Text>
-                      <Text style={{fontSize: 14, color: 'grey'}}>
-                        22/11/2023
-                      </Text>
-                    </View>
-                    <View style={styles.flexRowWithGap}>
-                      <Text style={{fontSize: 14, color: 'grey'}}>
-                        Reg No: {item?.seatNo}
-                      </Text>
-                    </View>
-                    <View
-                      style={[
-                        styles.flexRowWithGap,
-                        {width: '100%', justifyContent: 'space-between'},
-                      ]}>
-                      <Text style={{fontSize: 14, color: 'grey'}}>
-                        Seat No: {item?.seatNo}
-                      </Text>
-                      {/* <View style={styles.flexRowWithGap}> */}
-                      <Text style={{fontSize: 14, color: colors.grey}}>
-                        Fee: ${item.roomRent}
-                      </Text>
-                    </View>
-
-                    <View
-                      style={[
-                        styles.flexRowWithGap,
-                        {
-                          justifyContent: 'flex-end',
-                          borderTopWidth: 1,
-                          gap: horizontalScale(15),
-                          borderTopColor: colors.lightygrey,
-                          paddingTop: verticalScale(12),
-                        },
-                      ]}>
-                      <TouchableOpacity>
-                        <Icon
-                          name={'user-lock'}
-                          color={colors.black}
-                          size={20}
-                        />
-                      </TouchableOpacity>
-                      <TouchableOpacity>
-                        <Icon
-                          name={'user-plus'}
-                          color={colors.black}
-                          size={20}
-                        />
-                      </TouchableOpacity>
-                      <TouchableOpacity>
-                        <Icon name={'trash-can'} color={colors.red} size={20} />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() =>
-                          navigation.navigate('Registartion_View')
-                        }>
-                        <Icon
-                          name={'file-pdf'}
-                          color={colors.green}
-                          size={20}
-                        />
-                      </TouchableOpacity>
-                      <TouchableOpacity>
-                        <Icon name={'rotate'} color={colors.black} size={20} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </Card>
+                  </Card>
+                )}
               </View>
             );
           })}
@@ -261,13 +332,20 @@ const Register_Candidate_Screen = ({navigation}) => {
       <View style={{height: 'auto'}}>
         <FlatList
           // ListHeaderComponentStyle={{marginHorizontal: horizontalScale(10)}}
-          ListHeaderComponent={<Render_Stats value={statsType} setValue={setStatsType}  data={registrationStats} />}
+          ListHeaderComponent={
+            <Render_Stats
+              value={statsType}
+              setValue={setStatsType}
+              data={registrationStats}
+            />
+          }
           showsVerticalScrollIndicator={false}
           data={registration}
           contentContainerStyle={styles.room_section}
           renderItem={({item}) => {
             return <RenderItem item={item} />;
           }}
+          keyExtractor={(item, i) => i.toString()}
         />
       </View>
       <Render_Add_btn

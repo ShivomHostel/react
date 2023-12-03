@@ -3,14 +3,20 @@ import React, {useState} from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import Main_Header from '../../Components/headers/Main_Header';
 import {
+  height,
   horizontalScale,
   moderateScale,
   verticalScale,
+  width,
 } from '../../Utils/Metrics';
 import {colors} from '../../Utils/Colors';
 import moment from 'moment';
 import Add_Expenses_Modal from '../../Components/modals/Add_Expenses_Modal';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+
 const Expenses_Screen = ({navigation}) => {
+  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
+  const [isEndDatePickerVisible, setEndIsDatePickerVisible] = useState(false);
   const [start_Date, setStart_Date] = useState(moment.now());
   const [end_Date, setEnd_Date] = useState(moment.now());
   const [date, setDate] = useState(moment.now());
@@ -41,64 +47,37 @@ const Expenses_Screen = ({navigation}) => {
               justifyContent: 'space-around',
               width: '100%',
               alignItems: 'center',
+              gap: 12,
             }}>
             <View
               style={{
                 flexDirection: 'row',
-                width: '50%',
-                alignItems: 'center',
+                 alignItems: 'center',
               }}>
               <Text style={styles.label}>From : </Text>
-              <TouchableOpacity style={styles.picker}>
+              <TouchableOpacity
+                onPress={() => setIsDatePickerVisible(true)}
+                style={styles.picker}>
                 <Text>{moment(start_Date).format('DD-MMM-YYYY')}</Text>
               </TouchableOpacity>
             </View>
             <View
               style={{
                 flexDirection: 'row',
-                width: '50%',
                 alignItems: 'center',
                 justifyContent: 'flex-end',
               }}>
               <Text style={styles.label}>To : </Text>
-              <TouchableOpacity style={styles.picker}>
+              <TouchableOpacity
+                onPress={() => setEndIsDatePickerVisible(true)}
+                style={styles.picker}>
                 <Text>{moment(end_Date).format('DD-MMM-YYYY')}</Text>
               </TouchableOpacity>
             </View>
-          </View>
-          <View
-            style={{
-              padding: horizontalScale(5),
-              flexDirection: 'row',
-              justifyContent: 'center',
-              width: '100%',
-              alignItems: 'center',
-              gap: horizontalScale(12),
-            }}>
             <TouchableOpacity
-              style={{
-                height: verticalScale(40),
-                paddingHorizontal: horizontalScale(12),
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderRadius: horizontalScale(4),
-                backgroundColor: colors.AppDefaultColor,
-              }}>
+              style={styles.button}>
               <Text style={{fontSize: moderateScale(14), color: colors.white}}>
                 Filter
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                height: verticalScale(40),
-                paddingHorizontal: horizontalScale(12),
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderRadius: horizontalScale(4),
-                backgroundColor: colors.AppDefaultColor,
-              }}>
-              <Text style={{fontSize: moderateScale(14), color: colors.white}}>
-                Report
               </Text>
             </TouchableOpacity>
           </View>
@@ -106,11 +85,13 @@ const Expenses_Screen = ({navigation}) => {
             contentContainerStyle={{
               padding: horizontalScale(12),
               gap: verticalScale(12),
+              paddingBottom:verticalScale(80)
+              // height:'80%'
             }}
-            data={[1, 2, 3, 4]}
+            data={[1, 2, 3, 4, 5, 6, 7, 8, 9]}
             renderItem={item => {
               return (
-                <View style={[styles.chip, styles.shadow]}>
+                <TouchableOpacity onPress={()=>navigation.navigate('Category_Expenses')} style={[styles.chip, styles.shadow]}>
                   <View style={styles.left}>
                     <Text style={styles.title}>Groceries</Text>
                   </View>
@@ -122,16 +103,49 @@ const Expenses_Screen = ({navigation}) => {
                       {moment(date).format('DD-MMM-YYYY')}
                     </Text>
                   </View>
-                </View>
+                </TouchableOpacity>
               );
             }}
+            keyExtractor={(item,i)=>i.toString()}
           />
         </View>
+        <TouchableOpacity
+          style={[
+            styles.button,
+            {
+              backgroundColor: '#dc3545',
+              position: 'absolute',
+              bottom: verticalScale(20),
+              left: horizontalScale(20),
+            },
+          ]}>
+          <Text style={{fontSize: moderateScale(14), color: colors.white}}>
+            Report
+          </Text>
+        </TouchableOpacity>
         <Render_Add_btn handleNavigation={() => setIsModalVisible(true)} />
       </View>
       <Add_Expenses_Modal
         isModalVisible={isModalVisible}
         setIsModalVisible={setIsModalVisible}
+      />
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        onConfirm={date => {
+          setStart_Date(date);
+          setIsDatePickerVisible(false);
+        }}
+        onCancel={() => setIsDatePickerVisible(false)}
+      />
+      <DateTimePickerModal
+        isVisible={isEndDatePickerVisible}
+        mode="date"
+        onConfirm={date => {
+          setEnd_Date(date);
+          setEndIsDatePickerVisible(false);
+        }}
+        onCancel={() => setEndIsDatePickerVisible(false)}
       />
     </>
   );
@@ -145,6 +159,7 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     width: '100%',
+    height:height- verticalScale(135)
     // padding: horizontalScale(12),
   },
   chip: {
@@ -193,10 +208,19 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: verticalScale(40),
-    width: horizontalScale(120),
+    // width: horizontalScale(120),
     borderRadius: horizontalScale(4),
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.white,
+    paddingHorizontal: horizontalScale(12),
+  },
+  button: {
+    height: verticalScale(40),
+    paddingHorizontal: horizontalScale(12),
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: horizontalScale(4),
+    backgroundColor: colors.AppDefaultColor,
   },
 });

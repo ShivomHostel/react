@@ -9,6 +9,7 @@ import LoginScreen from '../../Screen/LoginScreen.js';
 import RegisterScreen from '../../Screen/RegisterScreen';
 import TabNavigation from '../TabNavigation/TabNavigation';
 import Registarion_View from '../../Screen/Registration/Registarion_View';
+import Category_Expenses from '../../Screen/Expenses/Category_Expenses';
 function MainNavigation(props) {
   const Stack = createNativeStackNavigator();
   return (
@@ -37,6 +38,11 @@ function MainNavigation(props) {
         <Stack.Screen
           name="Registartion_View"
           component={Registarion_View}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Category_Expenses"
+          component={Category_Expenses}
           options={{headerShown: false}}
         />
       </Stack.Navigator>
