@@ -1,23 +1,50 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
-import InputCard from './cards/InputCard'
+import {StyleSheet, Text, View} from 'react-native';
+import React from 'react';
+import InputCard from './cards/InputCard';
 
-const Account_Form = () => {
-    return (
-        <View style={styles.container}>
-            <InputCard title={'FIRST NAME'} name={'first_Name'} placeholder={'FIRST NAME'} />
-            <InputCard title={'LAST NAME'} name={'last_Name'} placeholder={'LAST NAME'} />
-            <InputCard title={'EMAIL'} name={'email'} placeholder={'EMAIL'} />
-            <InputCard title={'MOBILE'} name={'mobile'} placeholder={'MOBILE'} />
-            <InputCard title={'ALTERNATE MOBILE'} name={'alternate_mobile'} placeholder={'ALTERNATE MOBILE'} />
-        </View>
-    )
-}
+const Account_Form = ({
+  email,
+  mobileNumber,
+  password,
+  conformPassword,
+  updateFields,
+  errors,
+}) => {
+  return (
+    <View style={styles.container}>
+      <InputCard
+        title={'YOUR USER NAME'}
+        value={email + ' ' + mobileNumber}
+        name={'userName'}
+        placeholder={'YOUR USER NAME'}
+        editable={false}
+      />
+      <InputCard
+        title={'PASSWORD'}
+        value={password}
+        updateFields={updateFields}
+        onBlur={() => validateField('password', password)}
+        name={'password'}
+        placeholder={'PASSWORD'}
+        error={errors?.password}
+      />
+      <InputCard
+        title={'CONFIRM PASSWORD'}
+        value={conformPassword}
+        updateFields={updateFields}
+        onBlur={() => validateField('conformPassword', conformPassword)}
+        name={'conformPassword'}
+        placeholder={'CONFIRM PASSWORD'}
+        error={errors?.conformPassword}
+      />
+    </View>
+  );
+};
 
-export default Account_Form
+export default Account_Form;
 
 const styles = StyleSheet.create({
-    container:{
-        gap:15,
-    }
-})
+  container: {
+    gap: 15,
+  },
+});

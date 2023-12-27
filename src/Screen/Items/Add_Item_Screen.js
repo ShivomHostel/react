@@ -13,8 +13,9 @@ import moment from 'moment';
 import Add_Item_Model from '../../Components/modals/Add_Item_Model';
 import {colors} from '../../Utils/Colors';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+import Header from '../../Components/headers/Header';
 
-const Add_Item_Screen = () => {
+const Add_Item_Screen = ({navigation}) => {
   const bottomSheetRef = useRef(null);
 
   // variablesc
@@ -45,10 +46,8 @@ const Add_Item_Screen = () => {
     <>
       <BottomSheetModalProvider>
         <View style={styles.container}>
-          <Main_Header
-            title={'Add Item'}
-            openDrawer={() => navigation.openDrawer()}
-          />
+          <Header title={'Add Item'} path={() => navigation.goBack()} />
+
           <View style={styles.wrapper}>
             <FlatList
               contentContainerStyle={{
@@ -77,15 +76,21 @@ const Add_Item_Screen = () => {
                     <View style={styles.right}>
                       <View style={{width: width / 3}}>
                         <Text style={[styles.label]}>Rate</Text>
-                        <Text style={styles.price}>₹ {Math.random().toFixed(3)*1000}</Text>
+                        <Text style={styles.price}>
+                          ₹ {Math.random().toFixed(3) * 1000}
+                        </Text>
                       </View>
                       <View style={{width: width / 3}}>
                         <Text style={[styles.label]}>Tax</Text>
-                        <Text style={styles.price}>₹ {Math.random().toFixed(2)*100}</Text>
+                        <Text style={styles.price}>
+                          ₹ {Math.random().toFixed(2) * 100}
+                        </Text>
                       </View>
                       <View style={{width: width / 3}}>
                         <Text style={[styles.label]}>Amount</Text>
-                        <Text style={styles.price}>₹ {Math.random().toFixed(3)*1000}</Text>
+                        <Text style={styles.price}>
+                          ₹ {Math.random().toFixed(3) * 1000}
+                        </Text>
                       </View>
                     </View>
                   </View>
@@ -95,11 +100,11 @@ const Add_Item_Screen = () => {
           </View>
           <Render_Add_btn handleNavigation={handlePress} />
         </View>
-      <Add_Item_Model
-        bottomSheetRef={bottomSheetRef}
-        snapPoints={snapPoints}
-        handleSheetChanges={handleSheetChanges}
-      />
+        <Add_Item_Model
+          bottomSheetRef={bottomSheetRef}
+          snapPoints={snapPoints}
+          handleSheetChanges={handleSheetChanges}
+        />
       </BottomSheetModalProvider>
     </>
   );
