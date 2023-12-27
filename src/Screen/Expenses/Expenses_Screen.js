@@ -1,6 +1,13 @@
-<<<<<<< HEAD
-import {StyleSheet, Text, View, FlatList, TouchableOpacity} from 'react-native';
-import React, {useState} from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+  RefreshControl,
+} from 'react-native';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import Main_Header from '../../Components/headers/Main_Header';
 import {
@@ -14,15 +21,66 @@ import {colors} from '../../Utils/Colors';
 import moment from 'moment';
 import Add_Expenses_Modal from '../../Components/modals/Add_Expenses_Modal';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  deleteExpenseCategoryThunkAPI,
+  handleExpensesDetailseThunkAPI,
+} from '../../Service/api/thunks';
+import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+import Update_Expenses_Modal from '../../Components/modals/Update_Expenses_Modal';
 
 const Expenses_Screen = ({navigation}) => {
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
+  const bottomSheetRef = useRef(null);
+  const updateRef = useRef(null);
+  const snapPoints = useMemo(() => ['75%', '100%'], []);
   const [isEndDatePickerVisible, setEndIsDatePickerVisible] = useState(false);
   const [start_Date, setStart_Date] = useState(moment.now());
   const [end_Date, setEnd_Date] = useState(moment.now());
   const [date, setDate] = useState(moment.now());
   const [isModalVisible, setIsModalVisible] = useState(false);
-  console.log('isModalVisible ', isModalVisible);
+  const dispatch = useDispatch();
+  const {expensesListResponse} = useSelector(state => state.root.expensesData);
+  const [refreshing, setRefreshing] = useState(false);
+  const [categoryData, setCategoryData] = useState(null);
+
+  // console.log('expensesListResponse', expensesListResponse?.response);
+  useEffect(() => {
+    dispatch(handleExpensesDetailseThunkAPI());
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    dispatch(handleExpensesDetailseThunkAPI());
+    setRefreshing(false);
+  };
+
+  const handleDelete = id => {
+    Alert.alert('Delete', 'Do you want to Delete Category ?', [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {
+        text: 'OK',
+        onPress: () =>
+          dispatch(deleteExpenseCategoryThunkAPI(id))
+            .then(res => {
+              // console.log('resp', res);
+              if (res?.payload?.status === true) {
+                Alert.alert('Success', res.payload.message);
+                dispatch(handleExpensesDetailseThunkAPI());
+              } else {
+                Alert.alert('Error', 'Something Went wrong!');
+              }
+            })
+            .catch(err => {
+              console.log(err);
+            }),
+      },
+    ]);
+  };
 
   const Render_Add_btn = ({handleNavigation}) => {
     return (
@@ -34,7 +92,7 @@ const Expenses_Screen = ({navigation}) => {
     );
   };
   return (
-    <>
+    <BottomSheetModalProvider>
       <View style={styles.container}>
         <Main_Header
           title={'Expenses'}
@@ -53,7 +111,7 @@ const Expenses_Screen = ({navigation}) => {
             <View
               style={{
                 flexDirection: 'row',
-                 alignItems: 'center',
+                alignItems: 'center',
               }}>
               <Text style={styles.label}>From : </Text>
               <TouchableOpacity
@@ -75,8 +133,7 @@ const Expenses_Screen = ({navigation}) => {
                 <Text>{moment(end_Date).format('DD-MMM-YYYY')}</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={styles.button}>
+            <TouchableOpacity style={styles.button}>
               <Text style={{fontSize: moderateScale(14), color: colors.white}}>
                 Filter
               </Text>
@@ -86,28 +143,49 @@ const Expenses_Screen = ({navigation}) => {
             contentContainerStyle={{
               padding: horizontalScale(12),
               gap: verticalScale(12),
-              paddingBottom:verticalScale(80)
+              paddingBottom: verticalScale(80),
               // height:'80%'
             }}
-            data={[1, 2, 3, 4, 5, 6, 7, 8, 9]}
-            renderItem={item => {
+            data={expensesListResponse?.response?.TableData}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            renderItem={({item}) => {
               return (
-                <TouchableOpacity onPress={()=>navigation.navigate('Category_Expenses')} style={[styles.chip, styles.shadow]}>
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate('Category_Expenses', {
+                      category_id: item.id,
+                    })
+                  }
+                  style={[styles.chip, styles.shadow]}>
                   <View style={styles.left}>
-                    <Text style={styles.title}>Groceries</Text>
+                    <Text style={styles.title}>{item?.name}</Text>
+                    <Text style={[styles.label, {color: colors.red}]}>
+                      ₹ {item.value}
+                    </Text>
                   </View>
                   <View style={styles.right}>
-                    <Text style={[styles.label, {color: colors.red}]}>
-                      ₹ 25000
-                    </Text>
-                    <Text style={styles.label}>
-                      {moment(date).format('DD-MMM-YYYY')}
-                    </Text>
+                    {item?.value <= 0 && (
+                      <TouchableOpacity onPress={() => handleDelete(item?.id)}>
+                        <Icon name={'trash-can'} color={colors.red} size={20} />
+                      </TouchableOpacity>
+                    )}
+                    <TouchableOpacity
+                      onPress={() => {
+                        setCategoryData({
+                          category_id: item?.id,
+                          category_name: item?.name,
+                        }),
+                          updateRef.current.present();
+                      }}>
+                      <Icon name={'edit'} color={colors.black} size={20} />
+                    </TouchableOpacity>
                   </View>
                 </TouchableOpacity>
               );
             }}
-            keyExtractor={(item,i)=>i.toString()}
+            keyExtractor={(item, i) => i.toString()}
           />
         </View>
         <TouchableOpacity
@@ -124,11 +202,18 @@ const Expenses_Screen = ({navigation}) => {
             Report
           </Text>
         </TouchableOpacity>
-        <Render_Add_btn handleNavigation={() => setIsModalVisible(true)} />
+        <Render_Add_btn
+          handleNavigation={() => bottomSheetRef.current.present()}
+        />
       </View>
       <Add_Expenses_Modal
-        isModalVisible={isModalVisible}
-        setIsModalVisible={setIsModalVisible}
+        bottomSheetRef={bottomSheetRef}
+        snapPoints={snapPoints}
+      />
+      <Update_Expenses_Modal
+        bottomSheetRef={updateRef}
+        snapPoints={snapPoints}
+        Data={categoryData}
       />
       <DateTimePickerModal
         isVisible={isDatePickerVisible}
@@ -148,7 +233,7 @@ const Expenses_Screen = ({navigation}) => {
         }}
         onCancel={() => setEndIsDatePickerVisible(false)}
       />
-    </>
+    </BottomSheetModalProvider>
   );
 };
 
@@ -160,7 +245,7 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     width: '100%',
-    height:height- verticalScale(135)
+    height: height - verticalScale(135),
     // padding: horizontalScale(12),
   },
   chip: {
@@ -169,7 +254,7 @@ const styles = StyleSheet.create({
     borderRadius: horizontalScale(10),
     backgroundColor: colors.white,
     padding: horizontalScale(12),
-    flexDirection: 'row',
+    // flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
@@ -191,10 +276,20 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(14),
     color: colors.black,
   },
+  left: {
+    height: '50%',
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   right: {
-    height: '100%',
-    alignItems: 'flex-end',
-    justifyContent: 'space-evenly',
+    height: '50%',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flexDirection: 'row',
+    gap: horizontalScale(12),
   },
   addbtn: {
     height: verticalScale(60),
@@ -225,102 +320,3 @@ const styles = StyleSheet.create({
     backgroundColor: colors.AppDefaultColor,
   },
 });
-=======
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {useState} from 'react';
-import Main_Header from '../../Components/headers/Main_Header';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { BarChart, PieChart } from 'react-native-gifted-charts';
-import { expenses_data, pieData } from '../../Utils/constants';
-import { horizontalScale } from '../../Utils/Metrics';
-
-const Expenses_Screen = ({navigation}) => {
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(true);
-  const handleConfirm = date => {
-    console.warn('A date has been picked: ', date);
-    setDatePickerVisibility(false);
-  };
-  const handleCancel = () => {
-    setDatePickerVisibility(false);
-  };
-
-  const DatePicker = ({isVisible}) => {
-    return (
-      <DateTimePickerModal
-        isVisible={isVisible}
-        mode="date"
-        onConfirm={handleConfirm}
-        onCancel={() => setDatePickerVisibility(false)}
-      />
-    );
-  };
-  return (
-    <View>
-      <Main_Header
-        title={'Expenses'}
-        openDrawer={() => navigation.openDrawer()}
-      />
-      <View>
-        <View style={styles.flexRow}>
-          <View style={styles.flexRow}>
-            <Text>From: </Text>
-            <TouchableOpacity>
-              <Text>MM/DD/YYYY</Text>
-            </TouchableOpacity>
-            <DateTimePickerModal
-              isVisible={isDatePickerVisible}
-              mode="date"
-              onConfirm={handleConfirm}
-              onCancel={() => setDatePickerVisibility(false)}
-            />
-          </View>
-          <View style={styles.flexRow}>
-            <Text>To: </Text>
-            <TouchableOpacity>
-              <Text>MM/DD/YYYY</Text>
-            </TouchableOpacity>
-            <DateTimePickerModal
-              isVisible={isDatePickerVisible}
-              mode="date"
-              onConfirm={handleConfirm}
-              onCancel={() => setDatePickerVisibility(false)}
-            />
-          </View>
-        </View>
-        <View style={styles.flexRow}>
-          <TouchableOpacity>
-            <Text>Filter</Text>
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Text>Reports</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.chartSection}>
-        <PieChart
-              data={pieData}
-              showText
-              textColor="white"
-              radius={horizontalScale(130)}
-              textSize={15}
-              focusOnPress
-              textBackgroundRadius={26}
-            />
-        </View>
-      </View>
-    </View>
-  );
-};
-
-export default Expenses_Screen;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  flexRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-  },
-  chartSection: {},
-});
->>>>>>> main

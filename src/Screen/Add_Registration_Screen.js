@@ -1,6 +1,14 @@
-<<<<<<< HEAD
-import React, {useState} from 'react';
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
+  Alert,
+  Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -17,52 +25,119 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
 import Choose_Image from '../Components/cards/Choose_Image';
 import Header from '../Components/headers/Header';
-import {err} from 'react-native-svg';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  GetFormNo,
+  GetRoomsListApi,
+  GetSeatsListApi,
+  studentRegisterApi,
+} from '../Service/slices/RegisterSlice';
+import {studentRegisterThunk} from '../Service/api/thunks';
+import ImagePicker from 'react-native-image-crop-picker';
+// import {PickImage} from '../Hooks/useImagePicker';
 
-const Add_Registration_Screen = ({navigation}) => {
+const INITIAL_DATA = {
+  formNumber: null,
+  roomNumber: null,
+  seatNumber: null,
+  registrationDate: null,
+  candidateName: '',
+  birthDate: null,
+  idProof: null,
+  candidatePhone: null,
+  email: null,
+  blood_Group: null,
+  courseName: null,
+  courseDescription: 'Computer Science',
+  jobDescription: '',
+  instituteName: null,
+  instituteDescription: 'B u Bhopal',
+  companyName: null,
+  companyDescription: '',
+  stayDuration: null,
+  healthIssue: null,
+  healthDescription: '',
+  vehicleNumber: null,
+  vehicleDescription: '',
+  fatherName: null,
+  fatherOccupation: null,
+  motherName: null,
+  motherOccupation: null,
+  parentsPhone1: null,
+  parentsPhone2: null,
+  parentsEmail: null,
+  parentsAddress: null,
+  state: null,
+  pincode: null,
+  guardianName: null,
+  guardianNumber: null,
+  guardianAddress: null,
+  candidateImg: null,
+  aadhareFront: null,
+  aadhareBack: null,
+  candidateSing: null,
+  parentSing: null,
+};
+
+const Add_Registration_Screen = memo(({navigation}) => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [isBirthDatePickerVisible, setBirthDatePickerVisibility] =
     useState(false);
-  const [room, setRoom] = useState(null);
-  const [seat, setSeat] = useState(null);
+  const [room, setRoom] = useState('');
+  const [seat, setSeat] = useState('');
+  const [seatsList, setSeatsList] = useState(null);
   const [date, setDate] = useState(moment.now());
   const [birth_Date, setBirth_Date] = useState(moment.now());
   const [blood_Group, setBlood_Group] = useState(null);
   const [errors, setErrors] = useState({});
   const [isFormValid, setIsFormValid] = useState(false);
+  const [userData, setUserData] = useState(INITIAL_DATA);
+  const dispatch = useDispatch();
+  const authData = useSelector(state => state.root.auth);
+  const {formNumberResponse, seatsListResponse, roomsListResponse} =
+    useSelector(state => state.root.registerData);
+  const updateFields = useCallback(
+    fields => {
+      setUserData(prev => {
+        return {...prev, ...fields};
+      });
+    },
+    [userData],
+  );
 
-  const INITIAL_DATA = {
-    formNumber: null,
-    roomNumber: room,
-    seatNumber: seat,
-    registrationDate: moment.now(),
-    candidateName: '',
-    birthDate: moment.now(),
-    idProof: null,
-    candidatePhone: null,
-    email: null,
-    blood_Group: blood_Group,
-    courseName: null,
-    jobType: null,
-    instituteName: null,
-    companyName: null,
-    stayDuration: null,
-    healthIssue: null,
-    vehicleNumber: null,
-    fatherName: null,
-    fatherOccupation: null,
-    motherName: null,
-    motherOccupation: null,
-    parentsPhone1: null,
-    parentsPhone2: null,
-    parentsEmail: null,
-    parentsAddress: null,
-    state: null,
-    pincode: null,
-    guardianName: null,
-    guardianNumber: null,
-    guardianAddress: null,
-  };
+  // console.log('authData', authData);
+
+  useEffect(() => {
+    dispatch(GetFormNo(authData?.userData?.token));
+    dispatch(GetRoomsListApi(authData?.userData?.token));
+    // dispatch(GetSeatsListApi(authData.userData.token));
+  }, []);
+
+  useLayoutEffect(() => {
+    updateFields({formNumber: formNumberResponse?.response?.formno});
+  }, [formNumberResponse?.response?.formno]);
+
+  // console.log('roomsListResponse', roomsListResponse);
+  // console.log('roomList', roomsList);
+
+  const getObjList = useCallback(list => {
+    return list?.map(key => ({
+      value: key,
+      label: key,
+    }));
+  }, []);
+
+  const roomsList = getObjList(roomsListResponse?.response?.rooms);
+  const handleSelectRoom = useCallback(item => {
+    updateFields({roomNumber: item});
+    dispatch(GetSeatsListApi({roomNo: item}));
+    console.log('seatsListResponse', seatsListResponse);
+    const sList = getObjList(seatsListResponse?.response?.seats);
+    setSeatsList(sList);
+  }, []);
+  const handleSelectSeat = useCallback(item => {
+    updateFields({seatNumber: item});
+  }, []);
 
   const validateForm = () => {
     let errors = {};
@@ -162,19 +237,191 @@ const Add_Registration_Screen = ({navigation}) => {
     return errors;
   };
 
-  const [userData, setUserData] = useState(INITIAL_DATA);
-
-  const updateFields = fields => {
-    setUserData(prev => {
-      return {...prev, ...fields};
-    });
-  };
-
   const handlePress = () => {
-    validateForm();
-    console.log('errors: ', errors);
-    console.log('UserData: ', userData);
+
+    var formdata = new FormData();
+    formdata.append('formNumber', String(userData.formNumber));
+    formdata.append('roomNumber', userData.roomNumber);
+    formdata.append('seatNumber', String(userData.seatNumber));
+    formdata.append('registrationDate',userData.registrationDate)
+    formdata.append('candidateName', userData.candidateName);
+    formdata.append('birthDate', userData.birthDate);
+    formdata.append('idProof', userData.idProof);
+    formdata.append('candidatePhone', userData.candidatePhone);
+    formdata.append('email', userData.email);
+    formdata.append('blood_Group', userData.blood_Group);
+    formdata.append('courseName', userData.courseName);
+    formdata.append('courseDescription', userData.courseDescription);
+    formdata.append('jobDescription',userData.jobDescription);
+    formdata.append('instituteName', userData.instituteName);
+    formdata.append('instituteDescription', userData.instituteDescription);
+    formdata.append('companyDescription', userData.companyDescription);
+    formdata.append('stayDuration', userData.stayDuration);
+    formdata.append('healthIssue', userData.healthIssue);
+    formdata.append('healthDescription', userData.healthDescription);
+    formdata.append('vehicleNumber', userData.vehicleNumber);
+    formdata.append('vehicleDescription', userData.vehicleDescription);
+    formdata.append('fatherName', userData.fatherName);
+    formdata.append('fatherOccupation', userData.fatherOccupation);
+    formdata.append('motherName', userData.motherName);
+    formdata.append('motherOccupation',userData.motherOccupation);
+    formdata.append('parentsPhone1', userData.parentsPhone1);
+    formdata.append('parentsPhone2',userData.parentsPhone2);
+    formdata.append('parentsEmail', userData.parentsEmail);
+    formdata.append('parentsAddress', userData.parentsAddress);
+    formdata.append('state', userData.state);
+    formdata.append('pincode', userData.pincode);
+    formdata.append('guardianName',userData.guardianName);
+    formdata.append('guardianNumber', userData.guardianNumber);
+    formdata.append('guardianAddress', userData.guardianAddress);
+    console.log(' userData.candidateImg', userData.aadhareFront);
+    formdata.append('candidateImg', {
+      uri: userData.candidateImg,
+      type: 'image/jpeg',
+      name: 'candidateImg.jpg',
+    });
+    formdata.append('candidateSing', {
+      uri: userData.candidateImg,
+      type: 'image/jpeg',
+      name: 'candidateSing.jpg',
+    });
+    formdata.append('aadhareFront', {
+      uri: userData.candidateImg,
+      type: 'image/jpeg',
+      name: 'aadhareFront.jpg',
+    });
+    formdata.append('aadhareBack', {
+      uri: userData.candidateImg,
+      type: 'image/jpeg',
+      name: 'aadhareBack.jpg',
+    });
+    formdata.append('parentSing', {
+      uri: userData.candidateImg,
+      type: 'image/jpeg',
+      name: 'parentSing.jpg',
+    });
+    console.log('payload :', formdata);
+    const formErrors = validateForm();
+    // var myHeaders = new Headers();
+    //   myHeaders.append(
+    //     'Authorization',
+    //     '$2y$10$LOii0fKt08PFgsOZHtuenOpSot.yaOmKAY96c2.SEZFbG3/qCo3wa',
+    //   );
+    //   myHeaders.append('Content-Type', 'multipart/form-data');
+    //   var requestOptions = {
+    //         method: 'POST',
+    //         headers: myHeaders,
+    //         body: formdata,
+    //         redirect: 'follow',
+    //       };
+      
+    //       fetch(
+    //         'https://mystrax.com/devops/devopstest/public/api/studentRegister',
+    //         requestOptions,
+    //       )
+    //         .then(response => response.text())
+    //         .then(result => console.log('result', result))
+    //         .catch(error => console.log('error', error));
+        
+
+    // if (Object.keys(formErrors).length === 0) {
+    dispatch(studentRegisterApi(formdata));
+    // }
+    // if (validateForm()) {
+    //   console.log('UserData: ', userData);
+    // }
+    // console.log('errors: ', errors);
   };
+
+  // const handlePress = () => {
+  //   var myHeaders = new Headers();
+  //   myHeaders.append(
+  //     'Authorization',
+  //     '$2y$10$LOii0fKt08PFgsOZHtuenOpSot.yaOmKAY96c2.SEZFbG3/qCo3wa',
+  //   );
+  //   myHeaders.append('Content-Type', 'multipart/form-data');
+  //   console.log(
+  //     'type',
+  //     typeof userData.registrationDate,
+  //     userData.registrationDate,
+  //   );
+  //   var formdata = new FormData();
+  //   formdata.append('formNumber', userData.formNumber);
+  //   formdata.append('roomNumber', userData.roomNumber);
+  //   formdata.append('seatNumber', userData.seatNumber);
+  //   formdata.append('registrationDate', userData.registrationDate);
+  //   formdata.append('candidateName', userData.candidateName);
+  //   formdata.append('birthDate', userData.birthDate);
+  //   formdata.append('idProof', ' 123456789012');
+  //   formdata.append('candidatePhone', ' 9876543210');
+  //   formdata.append('email', ' john.doe@example.com');
+  //   formdata.append('blood_Group', ' A+');
+  //   formdata.append('courseName', ' coursetype');
+  //   formdata.append('courseDescription', ' Computer Science');
+  //   formdata.append('jobDescription', '');
+  //   formdata.append('instituteName', 'institute Name');
+  //   formdata.append('instituteDescription', 'B u Bhopal');
+  //   formdata.append('companyDescription', '');
+  //   formdata.append('stayDuration', '3 month');
+  //   formdata.append('healthIssue', ' no');
+  //   formdata.append('healthDescription', '');
+  //   formdata.append('vehicleNumber', 'no');
+  //   formdata.append('vehicleDescription', '');
+  //   formdata.append('fatherName', ' "John Doe Sr.",');
+  //   formdata.append('fatherOccupation', ' "Engineer",');
+  //   formdata.append('motherName', ' "Jane Doe",');
+  //   formdata.append('motherOccupation', ' "Doctor",');
+  //   formdata.append('parentsPhone1', ' 9876543210');
+  //   formdata.append('parentsPhone2', ' 9876543211');
+  //   formdata.append('parentsEmail', ' parents@example.com');
+  //   formdata.append('parentsAddress', ' "123 Parent St, City",');
+  //   formdata.append('state', ' "SomeState",');
+  //   formdata.append('pincode', ' 123456');
+  //   formdata.append('guardianName', ' "Guardian Doe",');
+  //   formdata.append('guardianNumber', ' 9876543222');
+  //   formdata.append('guardianAddress', ' "456 Guardian St, City",');
+  //   console.log(' userData.candidateImg', userData.aadhareFront);
+  //   formdata.append('candidateImg', {
+  //     uri: userData.candidateImg,
+  //     type: 'image/jpeg',
+  //     name: 'candidateImg.jpg',
+  //   });
+  //   formdata.append('candidateSing', {
+  //     uri: userData.candidateSing,
+  //     type: 'image/jpeg',
+  //     name: 'candidateSing.jpg',
+  //   });
+  //   formdata.append('aadhareFront', {
+  //     uri: userData.aadhareFront,
+  //     type: 'image/jpeg',
+  //     name: 'aadhareFront.jpg',
+  //   });
+  //   formdata.append('aadhareBack', {
+  //     uri: userData.aadhareBack,
+  //     type: 'image/jpeg',
+  //     name: 'aadhareBack.jpg',
+  //   });
+  //   formdata.append('parentSing', {
+  //     uri: userData.parentSing,
+  //     type: 'image/jpeg',
+  //     name: 'parentSing.jpg',
+  //   });
+
+  //   var requestOptions = {
+  //     method: 'POST',
+  //     headers: myHeaders,
+  //     body: formdata,
+  //     redirect: 'follow',
+  //   };
+
+  //   fetch(
+  //     'https://mystrax.com/devops/devopstest/public/api/studentRegister',
+  //     requestOptions,
+  //   )
+  //     .then(response => response.text())
+  //     .then(result => console.log('result', result))
+  //     .catch(error => console.log('error', error));
+  // };
 
   const Section_Header = ({title}) => {
     return (
@@ -211,35 +458,28 @@ const Add_Registration_Screen = ({navigation}) => {
         <View style={styles.section}>
           <InputCard
             title={'Form no'}
-            value={userData.formNumber}
+            value={String(userData.formNumber)}
             updateFields={updateFields}
             name={'formNumber'}
             placeholder={'Form no'}
             keyboardType={'numeric'}
             error={errors.formNumber}
+            editable={false}
           />
           <PickerCard
             title={'Room no'}
             placeholder={'Select Room'}
-            value={room}
-            setValue={setRoom}
-            items={[
-              {value: 100, label: '100'},
-              {value: 101, label: '101'},
-              {value: 103, label: '103'},
-            ]}
+            value={userData.roomNumber}
+            setValue={handleSelectRoom}
+            items={roomsList}
             error={errors.roomNumber}
           />
           <PickerCard
             title={'Seat no'}
             placeholder={'Select Seat'}
-            value={seat}
-            setValue={setSeat}
-            items={[
-              {value: 100, label: '100'},
-              {value: 101, label: '101'},
-              {value: 103, label: '103'},
-            ]}
+            value={userData.seatNumber}
+            setValue={handleSelectSeat}
+            items={getObjList(seatsListResponse?.response?.seats)}
             error={errors.seatNumber}
           />
           <View style={{gap: verticalScale(10)}}>
@@ -259,7 +499,9 @@ const Add_Registration_Screen = ({navigation}) => {
                 paddingHorizontal: horizontalScale(12),
               }}>
               <Text style={{fontSize: moderateScale(12), color: colors.grey}}>
-                {moment(userData.registrationDate).format('DD-MM-YYYY')}
+                {userData.registrationDate
+                  ? moment(userData.registrationDate).format('YYYY-MM-DD')
+                  : 'Select Date'}
               </Text>
               <Icon name={'calendar'} color={colors.black} size={20} />
             </TouchableOpacity>
@@ -268,7 +510,8 @@ const Add_Registration_Screen = ({navigation}) => {
             isVisible={isDatePickerVisible}
             mode="date"
             onConfirm={date => {
-              updateFields({registrationDate: date});
+              const formatDate = moment(date).format('YYYY-MM-DD');
+              updateFields({registrationDate: formatDate});
               setDatePickerVisibility(false);
             }}
             onCancel={() => setDatePickerVisibility(false)}
@@ -301,7 +544,9 @@ const Add_Registration_Screen = ({navigation}) => {
                 paddingHorizontal: horizontalScale(12),
               }}>
               <Text style={{fontSize: moderateScale(12), color: colors.grey}}>
-                {moment(userData.birthDate).format('DD-MM-YYYY')}
+                {userData.birthDate
+                  ? moment(userData.birthDate).format('YYYY-MM-DD')
+                  : 'Select Date'}
               </Text>
               <Icon name={'calendar'} color={colors.black} size={20} />
             </TouchableOpacity>
@@ -309,7 +554,8 @@ const Add_Registration_Screen = ({navigation}) => {
               isVisible={isBirthDatePickerVisible}
               mode="date"
               onConfirm={date => {
-                updateFields({birthDate: date});
+                const formatDate = moment(date).format('YYYY-MM-DD');
+                updateFields({birthDate: formatDate});
                 setBirthDatePickerVisibility(false);
               }}
               onCancel={() => setBirthDatePickerVisibility(false)}
@@ -339,12 +585,13 @@ const Add_Registration_Screen = ({navigation}) => {
             value={userData.email}
             name={'email'}
             updateFields={updateFields}
-            keyboardType={'numeric'}
             error={errors.email}
           />
           <PickerCard
-            value={blood_Group}
-            setValue={setBlood_Group}
+            value={userData.blood_Group}
+            setValue={item => {
+              updateFields({blood_Group: item});
+            }}
             placeholder={'Select'}
             title={'Blood Group'}
             items={[
@@ -355,22 +602,118 @@ const Add_Registration_Screen = ({navigation}) => {
             ]}
             error={errors.blood_Group}
           />
+          <View style={{gap: verticalScale(10)}}>
+            <Text style={{color: colors.black, fontSize: moderateScale(16)}}>
+              Course/Job Type
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                gap:horizontalScale(12)
+              }}>
+              <View style={{flexDirection: 'row', gap: horizontalScale(10)}}>
+                <TouchableOpacity
+                  style={styles.checkBox}
+                  onPress={() => updateFields({courseName: 'coursetype'})}>
+                  {userData.courseName === 'coursetype' ? (
+                    <Icon name={'check'} size={15} color={colors.black} />
+                  ) : null}
+                </TouchableOpacity>
+                <Text style={{fontSize: moderateScale(14), color: colors.grey}}>
+                  Course type
+                </Text>
+              </View>
+              <View style={{flexDirection: 'row', gap: horizontalScale(10)}}>
+                <TouchableOpacity
+                  style={styles.checkBox}
+                  onPress={() => updateFields({courseName: 'jobtype'})}>
+                  {userData.courseName === 'jobtype' ? (
+                    <Icon name={'check'} size={15} color={colors.black} />
+                  ) : null}
+                </TouchableOpacity>
+                <Text style={{fontSize: moderateScale(14), color: colors.grey}}>
+                  Job type
+                </Text>
+              </View>
+            </View>
+          </View>
+          {userData.courseName === 'coursetype' ? (
+            <InputCard
+              title={'Course Details'}
+              placeholder={'Course Details'}
+              value={userData.courseDescription}
+              name={'courseDescription'}
+              updateFields={updateFields}
+              error={errors.courseDescription}
+            />
+          ) : (
+            <InputCard
+              title={'job Details'}
+              placeholder={'job Details'}
+              value={userData.jobDescription}
+              name={'jobDescription'}
+              updateFields={updateFields}
+              error={errors.jobDescription}
+            />
+          )}
+
+          <View style={{gap: verticalScale(10)}}>
+            <Text style={{color: colors.black, fontSize: moderateScale(16)}}>
+              Institute/Company Name
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                gap:horizontalScale(12)
+                // width: '50%',
+                // justifyContent: 'space-between',
+              }}>
+              <View style={{flexDirection: 'row', gap: horizontalScale(10)}}>
+                <TouchableOpacity
+                  style={styles.checkBox}
+                  onPress={() =>
+                    updateFields({instituteName: 'institute Name'})
+                  }>
+                  {userData.instituteName === 'institute Name' ? (
+                    <Icon name={'check'} size={15} color={colors.black} />
+                  ) : null}
+                </TouchableOpacity>
+                <Text style={{fontSize: moderateScale(14), color: colors.grey}}>
+                  Institute Name
+                </Text>
+              </View>
+              <View style={{flexDirection: 'row', gap: horizontalScale(10)}}>
+                <TouchableOpacity
+                  style={styles.checkBox}
+                  onPress={() => updateFields({instituteName: 'companyName'})}>
+                  {userData.instituteName === 'companyName' ? (
+                    <Icon name={'check'} size={15} color={colors.black} />
+                  ) : null}
+                </TouchableOpacity>
+                <Text style={{fontSize: moderateScale(14), color: colors.grey}}>
+                  Company Name
+                </Text>
+              </View>
+            </View>
+          </View>
+          {userData.instituteName === 'companyName'?
           <InputCard
-            title={'Course/Job Type'}
-            placeholder={'Course Details'}
-            value={userData.courseName}
-            name={'courseName'}
+            title={'Company description'}
+            placeholder={'Company description'}
+            value={userData.companyDescription}
+            name={'companyDescription'}
             updateFields={updateFields}
-            error={errors.courseName}
-          />
+            error={errors.companyDescription}
+          />:
           <InputCard
-            title={'Institute/Company Name'}
-            placeholder={'Institute Name'}
-            value={userData.instituteName}
-            name={'instituteName'}
+            title={'Institute description'}
+            placeholder={'Institute description'}
+            value={userData.instituteDescription}
+            name={'instituteDescription'}
             updateFields={updateFields}
-            error={errors.instituteName}
+            error={errors.instituteDescription}
           />
+          }
           <InputCard
             title={'Stay Duration'}
             placeholder={'Stay Duration'}
@@ -391,13 +734,7 @@ const Add_Registration_Screen = ({navigation}) => {
               }}>
               <View style={{flexDirection: 'row', gap: horizontalScale(10)}}>
                 <TouchableOpacity
-                  style={{
-                    height: verticalScale(20),
-                    width: verticalScale(20),
-                    backgroundColor: colors.white,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
+                  style={styles.checkBox}
                   onPress={() => updateFields({healthIssue: 'yes'})}>
                   {userData.healthIssue === 'yes' ? (
                     <Icon name={'check'} size={15} color={colors.black} />
@@ -409,13 +746,7 @@ const Add_Registration_Screen = ({navigation}) => {
               </View>
               <View style={{flexDirection: 'row', gap: horizontalScale(10)}}>
                 <TouchableOpacity
-                  style={{
-                    height: verticalScale(20),
-                    width: verticalScale(20),
-                    backgroundColor: colors.white,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
+                  style={styles.checkBox}
                   onPress={() => updateFields({healthIssue: 'no'})}>
                   {userData.healthIssue === 'no' ? (
                     <Icon name={'check'} size={15} color={colors.black} />
@@ -439,13 +770,7 @@ const Add_Registration_Screen = ({navigation}) => {
               }}>
               <View style={{flexDirection: 'row', gap: horizontalScale(10)}}>
                 <TouchableOpacity
-                  style={{
-                    height: verticalScale(20),
-                    width: verticalScale(20),
-                    backgroundColor: colors.white,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
+                  style={styles.checkBox}
                   onPress={() => updateFields({vehicleNumber: 'yes'})}>
                   {userData.vehicleNumber === 'yes' ? (
                     <Icon name={'check'} size={15} color={colors.black} />
@@ -457,13 +782,7 @@ const Add_Registration_Screen = ({navigation}) => {
               </View>
               <View style={{flexDirection: 'row', gap: horizontalScale(10)}}>
                 <TouchableOpacity
-                  style={{
-                    height: verticalScale(20),
-                    width: verticalScale(20),
-                    backgroundColor: colors.white,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
+                  style={styles.checkBox}
                   onPress={() => updateFields({vehicleNumber: 'no'})}>
                   {userData.vehicleNumber === 'no' ? (
                     <Icon name={'check'} size={15} color={colors.black} />
@@ -613,8 +932,16 @@ const Add_Registration_Screen = ({navigation}) => {
               justifyContent: 'space-between',
               paddingHorizontal: horizontalScale(20),
             }}>
-            <Choose_Image title={'Upload Candidate Aadhar Front'} />
-            <Choose_Image title={'Upload Candidate Aadhar Back'} />
+            <Choose_Image
+              setImageUrl={image => updateFields({aadhareFront: image})}
+              imageUrl={userData.aadhareFront}
+              title={'Upload Candidate Aadhar Front'}
+            />
+            <Choose_Image
+              setImageUrl={image => updateFields({aadhareBack: image})}
+              imageUrl={userData.aadhareBack}
+              title={'Upload Candidate Aadhar Back'}
+            />
           </View>
           <View
             style={{
@@ -623,8 +950,16 @@ const Add_Registration_Screen = ({navigation}) => {
               justifyContent: 'space-between',
               paddingHorizontal: horizontalScale(20),
             }}>
-            <Choose_Image title={'Candidate Sign'} />
-            <Choose_Image title={'Parent/Signature Sign'} />
+            <Choose_Image
+              imageUrl={userData.candidateSing}
+              setImageUrl={image => updateFields({candidateSing: image})}
+              title={'Candidate Sign'}
+            />
+            <Choose_Image
+              imageUrl={userData.parentSing}
+              setImageUrl={image => updateFields({parentSing: image})}
+              title={'Parent/Signature Sign'}
+            />
           </View>
           <View
             style={{
@@ -633,7 +968,11 @@ const Add_Registration_Screen = ({navigation}) => {
               justifyContent: 'space-between',
               paddingHorizontal: horizontalScale(20),
             }}>
-            <Choose_Image title={'Candidate Photo'} />
+            <Choose_Image
+              setImageUrl={image => updateFields({candidateImg: image})}
+              imageUrl={userData.candidateImg}
+              title={'Candidate Photo'}
+            />
           </View>
         </View>
         <View
@@ -652,7 +991,7 @@ const Add_Registration_Screen = ({navigation}) => {
       </ScrollView>
     </SafeAreaView>
   );
-};
+});
 
 export default Add_Registration_Screen;
 
@@ -683,372 +1022,11 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: moderateScale(14),
   },
-});
-=======
-import React, {useState} from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  ToastAndroid,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import WebView from 'react-native-webview';
-import {fontSize} from '../Utils/Size';
-import {colors} from '../Utils/Colors';
-import {
-  height,
-  horizontalScale,
-  moderateScale,
-  verticalScale,
-  width,
-} from '../Utils/Metrics';
-import InputCard from '../Components/cards/InputCard';
-import DropDownPicker from 'react-native-dropdown-picker';
-import PickerCard from '../Components/cards/PickerCard';
-import IP_Card from '../Components/cards/IP_Card';
-import Icon from 'react-native-vector-icons/FontAwesome6';
-import Choose_Image from '../Components/cards/Choose_Image';
-import ImageCropPicker from 'react-native-image-crop-picker';
-import Main_Header from '../Components/headers/Main_Header';
-
-const Add_Registration_Screen = ({navigation}) => {
-  const [open, setOpen] = useState(false);
-  const [candidate_Photo, set_Candidate_Photo] = useState(null);
-  const [aadhar_front, setAadhar_front] = useState(null);
-  const [aadhar_Back, setAadhar_Back] = useState(null);
-  const [candidate_Sign, setCandidate_Sign] = useState(null);
-  const [parent_Signature, setParent_Signature] = useState(null);
-
-  const [blood_Group, setBlood_Group] = useState(null);
-  const [blood_Group_list, setBlood_Group_list] = useState([
-    {label: 'A+', name: 'A+'},
-    {label: 'B+', name: 'B+'},
-    {label: 'O+', name: 'O+'},
-    {label: 'O-', name: 'O-'},
-    {label: 'AB+', name: 'AB+'},
-  ]);
-
-  const [occupation, setOccupation] = useState(null);
-  const [occupation_list, setOccupation_list] = useState([
-    {label: 'Course Type', name: 'course'},
-    {label: 'Job Type', name: 'job'},
-  ]);
-  const [company_Name, setCompany_Name] = useState(null);
-  const profession_list = [
-    {label: 'Institute Name', name: 'institute'},
-    {label: 'Company Name', name: 'company'},
-  ];
-
-  const handlePress = setImage => {
-    ImageCropPicker.openPicker({
-      path: 'my-file-path.jpg',
-      width: 300,
-      height: 400,
-      cropping: true,
-    })
-      .then(image => {
-        setImage(image.path);
-        console.log(image);
-      })
-      .catch(err => {
-        ToastAndroid.showWithGravity('Sometheing went wrong! ' + err, 50, 100);
-      });
-  };
-
-  const ButtonCard = ({title, color}) => {
-    return (
-      <TouchableOpacity
-        style={[
-          styles.btnCard,
-          {backgroundColor: color ? color : colors.AppDefaultColor},
-        ]}>
-        <Text style={styles.labelText}>{title}</Text>
-      </TouchableOpacity>
-    );
-  };
-
-  const AddPhotoBtn = () => {
-    return (
-      <TouchableOpacity style={styles.addphotoBtn}>
-        <Icon name="plus" size={15} color={colors.white} />
-      </TouchableOpacity>
-    );
-  };
-
-  return (
-    <ScrollView style={styles.container}>
-      <Main_Header
-        title={'Add Registration'}
-        openDrawer={() => navigation.openDrawer()}
-      />
-      <View style={[styles.centerRow, {paddingVertical: verticalScale(12)}]}>
-        <Text style={styles.labelText}>Registration Form</Text>
-      </View>
-      <View style={styles.filterSection}>
-        <InputCard title={'Form no'} placeholder={'39'} />
-        <InputCard title={'Room no'} />
-        <InputCard title={'Seat no'} />
-        <InputCard title={'Date'} />
-      </View>
-      <View style={[styles.centerRow, {paddingVertical: verticalScale(12)}]}>
-        <Text style={styles.labelText}>PERSONAL DETAILS</Text>
-      </View>
-      <View style={styles.detailSection}>
-        <InputCard title={'Candidate Name'} placeholder={'Candidate Name'} />
-        <InputCard title={'Birth Date'} placeholder={'01/01/2002'} />
-        <InputCard
-          title={'Aadhar/VT/Dl/Id Proof'}
-          placeholder={'Aadhar/VT/Dl/Id Proof *'}
-        />
-        <InputCard
-          title={'Candidate Mobile Number'}
-          placeholder={'Mobile Number '}
-        />
-        <InputCard title={'Email'} placeholder={'Email'} />
-        <PickerCard
-          title={'Blood Group'}
-          open={open}
-          value={blood_Group}
-          items={blood_Group_list}
-          setOpen={setOpen}
-          setValue={setBlood_Group}
-          setItems={setBlood_Group_list}
-        />
-        <IP_Card
-          title={'Job/Course'}
-          value={occupation}
-          setValue={setOccupation}
-          items={occupation_list}
-          placeholder={occupation === 'job' ? 'Job Details' : 'Course Details'}
-        />
-        <IP_Card
-          title={'Institute/Company Name'}
-          value={company_Name}
-          setValue={setCompany_Name}
-          items={profession_list}
-          placeholder={
-            company_Name === 'institute' ? 'Institute Name' : 'Company Name'
-          }
-        />
-        <InputCard
-          name={'Stay Duration'}
-          title={'Stay Duration'}
-          placeholder={'Stay Duration'}
-        />
-      </View>
-      <View style={[styles.centerRow, {paddingVertical: verticalScale(12)}]}>
-        <Text style={styles.labelText}>PARENT'S/GUARDIAN DETAIL</Text>
-      </View>
-      <View style={styles.parentDetails}>
-        <InputCard
-          name={'Father Name'}
-          title={'Father Name *'}
-          placeholder={'Father Name'}
-        />
-        <InputCard
-          name={'Occupation '}
-          title={'Occupation *'}
-          placeholder={'Occupation'}
-        />
-        <InputCard
-          name={'Mother Name'}
-          title={'Mother Name *'}
-          placeholder={'Mother Name'}
-        />
-        <InputCard
-          name={"Mother's Occupation"}
-          title={"Mother's Occupation *"}
-          placeholder={"Mother's Occupation"}
-        />
-        <View
-          style={{
-            flexDirection: 'row',
-            width: '100%',
-            justifyContent: 'space-between',
-            // marginVertical: verticalScale(10),
-            // height: verticalScale(50),
-          }}>
-          <InputCard
-            width={'49%'}
-            title={'Mobile Number 1'}
-            name={'mobile_number1'}
-            placeholder={'Mobile Number 1'}
-          />
-          <InputCard
-            width={'49%'}
-            title={'Mobile Number 2'}
-            name={'mobile_number2'}
-            placeholder={'Mobile Number 2'}
-          />
-        </View>
-        <InputCard name={'email'} title={'Email'} placeholder={'Email'} />
-        <InputCard
-          name={'full_address'}
-          title={'Full Address *'}
-          placeholder={'House No,Street,Landmark,City'}
-        />
-        <InputCard name={'state'} title={'State*'} placeholder={'State'} />
-        <InputCard
-          name={'pin_code'}
-          title={'Pin No *'}
-          placeholder={'Pin No'}
-        />
-      </View>
-      <View style={[styles.centerRow, {paddingVertical: verticalScale(12)}]}>
-        <Text style={styles.labelText}>GUARDIAN DETAILS</Text>
-      </View>
-      <View style={styles.detailSection}>
-        <InputCard
-          name={'guardian_name'}
-          title={'Guardian Name *'}
-          placeholder={'Guardian Name'}
-        />
-        <InputCard
-          name={'guardian_contact'}
-          title={'Guardian Contact Number *'}
-          placeholder={'Guardian Contact Number'}
-        />
-        <InputCard
-          name={'full_address'}
-          title={'Full Addess *'}
-          placeholder={'House No,Street,Landmark,City,State,Pincode'}
-        />
-      </View>
-      <View style={[styles.centerRow, {paddingVertical: verticalScale(12)}]}>
-        <Text style={styles.labelText}>DISCLAIMER</Text>
-      </View>
-      <View style={styles.detailSection}>
-        <View style={styles.flexRow}>
-          <Choose_Image
-            handlePress={handlePress}
-            image={candidate_Photo}
-            setImage={set_Candidate_Photo}
-            title={'Candidate Photo'}
-          />
-          <Choose_Image
-            handlePress={handlePress}
-            image={candidate_Sign}
-            setImage={setCandidate_Sign}
-            title={'Candidate Sign'}
-          />
-        </View>
-        <View style={styles.flexRow}>
-          <Choose_Image
-            handlePress={handlePress}
-            image={aadhar_Back}
-            setImage={setAadhar_Back}
-            title={'Upload Candidate Aadhar Back'}
-          />
-          <Choose_Image
-            handlePress={handlePress}
-            image={aadhar_front}
-            setImage={setAadhar_front}
-            title={'Upload Candidate Aadhar Front'}
-          />
-        </View>
-        <View style={styles.flexRow}>
-          <Choose_Image
-            handlePress={handlePress}
-            image={parent_Signature}
-            setImage={setParent_Signature}
-            title={'Parent/Signature Sign'}
-          />
-        </View>
-        <View style={styles.flexRow}>
-          <Text
-            style={[
-              styles.labelText,
-              {color: colors.txtgrey, fontSize: moderateScale(12)},
-            ]}>
-            <TouchableOpacity
-              style={{
-                height: verticalScale(15),
-                width: horizontalScale(15),
-                backgroundColor: colors.white,
-              }}></TouchableOpacity>{' '}
-            I DECLARE THAT THE INFORMATION GIVEN ABOVE IS TRUE TO THE BEST OF MY
-            KNOWLEDGE. I AGREE THAT IF ANY INFORMATION FURNISHED ABOVE FOUND
-            INCORRECT MY ADMISSION IS LIABLE TO BE CANCELLED.
-          </Text>
-        </View>
-        <View style={styles.flexRow}>
-          <ButtonCard title={'Review'} />
-          <ButtonCard title={'Submit'} color={`${colors.AppDefaultColor}75`} />
-          <ButtonCard title={'Share'} />
-        </View>
-      </View>
-    </ScrollView>
-  );
-};
-
-export default Add_Registration_Screen;
-
-const styles = StyleSheet.create({
-  container: {
-    // flex: 1,
-  },
-  centerRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: '#999966',
-  },
-  labelText: {
-    fontSize: fontSize.lable,
-    color: colors.white,
-    lineHeight: 20,
-  },
-  filterSection: {
-    width: '100%',
-    padding: horizontalScale(20),
-    gap: 10,
-  },
-  detailSection: {
-    width: '100%',
-    padding: horizontalScale(20),
-    gap: 10,
-  },
-  parentDetails: {
-    width: '100%',
-    padding: horizontalScale(20),
-    gap: 10, 
-  },
-  flexRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  chip: {
+  checkBox: {
+    height: verticalScale(20),
+    width: verticalScale(20),
     backgroundColor: colors.white,
-    height: verticalScale(250),
-    width: '45%',
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderRadius: 5,
-    borderColor: colors.grey,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  uploadedimage: {
-    height: '100%',
-    width: '100%',
-    resizeMode: 'cover',
-  },
-  addphotoBtn: {
-    height: 35,
-    width: 35,
-    borderRadius: 35,
-    backgroundColor: colors.AppDefaultColor,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  btnCard: {
-    height: verticalScale(50),
-    paddingHorizontal: horizontalScale(20),
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: horizontalScale(5),
-    backgroundColor: colors.AppDefaultColor,
   },
 });
->>>>>>> main
