@@ -1,5 +1,12 @@
-import {StyleSheet, Text, View, FlatList, TouchableOpacity} from 'react-native';
-import React, {memo, useCallback, useMemo, useRef, useState} from 'react';
+import {StyleSheet, Text, View, FlatList, TouchableOpacity, Alert} from 'react-native';
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import Main_Header from '../../Components/headers/Main_Header';
 import {
@@ -16,29 +23,72 @@ import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 import Header from '../../Components/headers/Header';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import Category_Expenses_Modal from '../../Components/modals/Category_Expenses_Modal';
+import {useDispatch, useSelector} from 'react-redux';
+import {expenseCategoryItemThunkAPI, expenseDeleteCategoryItemThunkAPI} from '../../Service/api/thunks';
+import Update_Expense_CategoryItem_Modal from '../../Components/modals/Update_Expense_CategoryItem_Modal';
 
-const Category_Expenses = ({navigation}) => {
+const Category_Expenses = ({navigation, route}) => {
+  const {category_id} = route.params;
   const bottomSheetRef = useRef(null);
+  const updateSheetRef = useRef(null);
   const [start_Date, setStart_Date] = useState(moment.now());
   const [end_Date, setEnd_Date] = useState(moment.now());
   const [paymentDate, SetPayment_Date] = useState(moment.now);
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
   const [isEndDatePickerVisible, setEndIsDatePickerVisible] = useState(false);
-
-  // variablesc
+  const [categoryItem, setCategoryItem] = useState(null);
   const snapPoints = useMemo(() => ['85%', '100%'], []);
+  const dispatch = useDispatch();
+  const {expenseCategoryItemResponse} = useSelector(
+    state => state.root.expensesData,
+  );
 
-  // callbacks
+  console.log(
+    'expenseCategoryItemResponse',
+    expenseCategoryItemResponse?.response,
+  );
+  useEffect(() => {
+    dispatch(expenseCategoryItemThunkAPI(category_id))
+      .then(res => console.log('res', res))
+      .catch(err => console.log(err));
+  }, []);
+
   const handleSheetChanges = useCallback(index => {
     console.log('handleSheetChanges', index);
   }, []);
-
-  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const handlePress = useCallback(() => {
     bottomSheetRef.current?.present();
     console.log(bottomSheetRef.current);
   }, []);
+
+
+  const handleDelete = id => {
+    Alert.alert('Delete', 'Do you want to Delete Category ?', [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {
+        text: 'OK',
+        onPress: () =>
+          dispatch(expenseDeleteCategoryItemThunkAPI(id))
+            .then(res => {
+              console.log('resp', res);
+              if (res?.payload?.status === true) {
+                Alert.alert('Success', res.payload.message);
+                dispatch(expenseCategoryItemThunkAPI());
+              } else {
+                Alert.alert('Error', 'Something Went wrong!');
+              }
+            })
+            .catch(err => {
+              console.log(err);
+            }),
+      },
+    ]);
+  };
 
   const Render_Add_btn = ({handleNavigation}) => {
     return (
@@ -50,7 +100,7 @@ const Category_Expenses = ({navigation}) => {
     );
   };
 
-  const Chip_Item = memo(() => {
+  const Chip_Item = memo(({item}) => {
     return (
       <View style={[styles.chip, styles.shadow]}>
         <View style={[styles.left, styles.flexRowWithSpace]}>
@@ -63,50 +113,79 @@ const Category_Expenses = ({navigation}) => {
                   fontFamily: 'Roboto-Light',
                 },
               ]}>
-              Code : A505
+              Code :{`A${item?.id}`}
             </Text>
-            <Text style={styles.title}>Groceries</Text>
+            <Text style={styles.title}>{item?.itemname}</Text>
           </View>
           <View>
             <Text style={[styles.label, {fontSize: moderateScale(12)}]}>
-              {moment(paymentDate).format('DD/MMM/YYYY')}
+              {moment(item?.billdate).format('DD/MMM/YYYY')}
             </Text>
           </View>
         </View>
         <View style={styles.right}>
-          <View style={{width: '30%'}}>
+          <View style={{width: '28%'}}>
             <Text style={[styles.label]}>Rate</Text>
             <Text style={styles.price}>
-              ₹ {Math.random().toFixed(3) * 1000}
+              <Icon name={'indian-rupee-sign'} size={14} color={colors.grey} />{' '}
+              {item.rate}
             </Text>
           </View>
-          <View style={{width: '30%'}}>
+          <View style={{width: '28%'}}>
             <Text style={[styles.label]}>Amount</Text>
             <Text style={styles.price}>
-              ₹ {Math.random().toFixed(3) * 1000}
+              <Icon name={'indian-rupee-sign'} size={14} color={colors.grey} />{' '}
+              {item?.amount}
             </Text>
           </View>
-          <View style={{width: '30%'}}>
+          <View style={{width: '28%'}}>
             <Text numberOfLines={1} style={[styles.label, {width: '100%'}]}>
               Payment Type
             </Text>
-            <Text style={styles.price}>Cash</Text>
+            <Text style={styles.price}>{item?.paymentmode}</Text>
+          </View>
+          <View
+            style={{
+              width: '16%',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <TouchableOpacity
+              style={[styles.button, {backgroundColor: colors.green}]}
+              onPress={() => {
+                setCategoryItem(item);
+                updateSheetRef.current.present()
+              }}>
+              <Icon name={'edit'} color={colors.white} size={20} />
+            </TouchableOpacity>
           </View>
         </View>
         <View style={styles.right}>
-          <View style={{width: '30%'}}>
+          <View style={{width: '28%'}}>
             <Text style={[styles.label]}>Item Name</Text>
-            <Text style={styles.price}>Doodh</Text>
+            <Text style={styles.price}>{item?.itemname}</Text>
           </View>
-          <View style={{width: '30%'}}>
+          <View style={{width: '28%'}}>
             <Text style={[styles.label]}>Quantity</Text>
-            <Text style={styles.price}>{Math.random().toFixed(1) * 10}</Text>
+            <Text style={styles.price}>{item?.quantity}</Text>
           </View>
-          <View style={{width: '30%'}}>
+          <View style={{width: '28%'}}>
             <Text numberOfLines={1} style={[styles.label, {width: '100%'}]}>
               Uploaded Bill
             </Text>
             <Text style={styles.price}>View</Text>
+          </View>
+          <View
+            style={{
+              width: '16%',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <TouchableOpacity
+              style={[styles.button, {backgroundColor: colors.AppDefaultColor}]}
+              onPress={() => handleDelete(item?.id)}>
+              <Icon name={'trash-can'} color={colors.white} size={20} />
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -173,9 +252,9 @@ const Category_Expenses = ({navigation}) => {
                 paddingBottom: verticalScale(80),
                 // height:'80%'
               }}
-              data={[1, 2, 3, 4, 5, 6, 7, 8, 9]}
-              renderItem={item => {
-                return <Chip_Item />;
+              data={expenseCategoryItemResponse?.response}
+              renderItem={({item}) => {
+                return <Chip_Item item={item} />;
               }}
             />
           </View>
@@ -185,6 +264,13 @@ const Category_Expenses = ({navigation}) => {
           bottomSheetRef={bottomSheetRef}
           snapPoints={snapPoints}
           handleSheetChanges={handleSheetChanges}
+          category_id={category_id}
+        />
+        <Update_Expense_CategoryItem_Modal
+          bottomSheetRef={updateSheetRef}
+          snapPoints={snapPoints}
+          category_id={category_id}
+          data={categoryItem}
         />
       </BottomSheetModalProvider>
       <DateTimePicker
@@ -245,6 +331,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Roboto-Medium',
     letterSpacing: 0.5,
     fontVariant: '',
+    textTransform: 'capitalize',
   },
   label: {
     fontSize: moderateScale(14),

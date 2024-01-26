@@ -5,8 +5,9 @@ import {
   Modal,
   Pressable,
   TextInput,
+  ToastAndroid,
 } from 'react-native';
-import React from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   height,
   horizontalScale,
@@ -17,24 +18,98 @@ import {
 import {colors} from '../../Utils/Colors';
 import InputCard from '../cards/InputCard';
 import Icon from 'react-native-vector-icons/FontAwesome6';
-const Add_Expenses_Modal = ({isModalVisible, setIsModalVisible}) => {
+import {
+  createExpensesCategoryThunkAPI,
+  handleExpensesDetailseThunkAPI,
+} from '../../Service/api/thunks';
+import {useDispatch} from 'react-redux';
+import {TouchableOpacity} from 'react-native-gesture-handler';
+import {BottomSheetModal} from '@gorhom/bottom-sheet';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+
+const validationSchema = Yup.object().shape({
+  category_id: Yup.string().required('Category is required'),
+ 
+});
+
+const Add_Expenses_Modal = ({
+  bottomSheetRef,
+  snapPoints,
+  handleSheetChanges,
+}) => {
+  const INITIAL_DATA = {category_name: null};
+  const [categoryData, setCategoryData] = useState(INITIAL_DATA);
+  const [errors, setErrors] = useState({});
+  const [isFormValid, setIsFormValid] = useState(false);
+  const dispatch = useDispatch();
+  const updateFields = useCallback(fields => {
+    setCategoryData(prev => {
+      return {...prev, ...fields};
+    });
+  }, []);
+
+  const validateForm = () => {
+    let errors = {};
+
+    // Validate name field
+    if (!categoryData.category_name) {
+      errors.category_name = 'Category Name is required.';
+    }
+    setErrors(errors);
+    setIsFormValid(Object.keys(errors).length === 0);
+    return errors;
+  };
+
+  const handlePress = () => {
+    if (validateForm()) {
+      dispatch(createExpensesCategoryThunkAPI(categoryData))
+        .then(res => {
+          console.log('resp', res);
+          if (res?.payload?.status === true) {
+            ToastAndroid.show(res?.payload?.message, 5000, 50);
+            setCategoryData(INITIAL_DATA);
+            bottomSheetRef?.current?.dismiss();
+            dispatch(handleExpensesDetailseThunkAPI());
+          } else {
+            ToastAndroid.showWithGravityAndOffset(
+              res?.payload?.error,
+              ToastAndroid.LONG,
+              ToastAndroid.TOP,
+              25, // X offset
+              50, // Y offset
+            );
+          }
+        })
+        .catch(err => {
+          ToastAndroid.show('Something went wrong!' + err, 5000);
+        });
+    }
+    console.log('errors', errors);
+  };
   return (
-    <>
-      {isModalVisible ? (
-        <Pressable
-          style={styles.Container}
-          onPress={() => setIsModalVisible(false)}>
-          <Modal
-            transparent
-            animationType="slide"
-            //   transparent={true}
-            visible={isModalVisible}
-            onRequestClose={() => {
-              setIsModalVisible(!isModalVisible);
-            }}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.title}>Add Category</Text>
-              <View style={styles.content}>
+    <BottomSheetModal
+      ref={bottomSheetRef}
+      index={1}
+      snapPoints={snapPoints}
+      // onChange={handleSheetChanges}
+    >
+      <View style={styles.modalContainer}>
+        <Text style={styles.title}>Add Category</Text>
+        <View style={styles.content}>
+          <Formik
+            initialValues={INITIAL_DATA}
+            validationSchema={validationSchema}
+            onSubmit={values => handleSubmit(values)}>
+            {({
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              values,
+              setValues,
+              errors,
+            }) => (
+              <>
                 <View
                   style={{
                     width: '100%',
@@ -47,27 +122,24 @@ const Add_Expenses_Modal = ({isModalVisible, setIsModalVisible}) => {
                   <TextInput
                     placeholder="Category name"
                     placeholderTextColor={colors.grey}
+                    value={categoryData.category_name}
+                    onChangeText={text => updateFields({category_name: text})}
                   />
                 </View>
-              </View>
-              <Pressable
-                style={[styles.button]}
-                onPress={() => setIsModalVisible(!isModalVisible)}>
-                <Text
-                  style={{color: colors.white, fontSize: moderateScale(14)}}>
-                  Add
-                </Text>
-              </Pressable>
-              <Pressable
-                style={styles.buttonClose}
-                onPress={() => setIsModalVisible(!isModalVisible)}>
-                <Icon name={'xmark'} size={20} color={colors.white} />
-              </Pressable>
-            </View>
-          </Modal>
-        </Pressable>
-      ) : null}
-    </>
+                {errors?.category_name && (
+                  <Text style={styles.error}>{errors?.category_name} </Text>
+                )}
+              </>
+            )}
+          </Formik>
+        </View>
+        <TouchableOpacity style={[styles.button]} onPress={() => handlePress()}>
+          <Text style={{color: colors.white, fontSize: moderateScale(14)}}>
+            Add
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </BottomSheetModal>
   );
 };
 
@@ -97,10 +169,11 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(20),
     color: colors.black,
     alignSelf: 'center',
+    fontFamily: 'Roboto-Medium',
   },
   content: {
     paddingTop: verticalScale(40),
-    gap: verticalScale(50),
+    gap: verticalScale(5),
   },
   button: {
     height: verticalScale(45),
@@ -121,5 +194,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.red,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  error: {
+    color: colors.red,
+    fontSize: 12,
+    fontFamily: 'Roboto-Medium',
   },
 });

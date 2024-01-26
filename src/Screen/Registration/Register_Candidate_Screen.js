@@ -1,13 +1,20 @@
-<<<<<<< HEAD
 import {
   FlatList,
+  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useRef, useState} from 'react';
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import {colors} from '../../Utils/Colors';
 import Header from '../../Components/headers/Header';
@@ -16,313 +23,44 @@ import {ThemeContext} from '../../Utils/Theme';
 import Card from '../../Components/cards/Card';
 import {fontSize} from '../../Utils/Size';
 import {registration, registrationStats} from '../../Utils/constants';
-import Render_Stats from '../../Components/Render_Stats';
-import Rooms_Form from '../../Components/Rooms_Form';
 import Main_Header from '../../Components/headers/Main_Header';
-
-const Register_Candidate_Screen = ({navigation}) => {
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  handleBasicRegisterDetails,
+  handleRegistrationListAPI,
+} from '../../Service/slices/RegisterSlice';
+import Old_Registrations from '../../Components/register/Old_Registrations';
+import Queue_Registration from '../../Components/register/Queue_Registration';
+import Regular_Registeration from '../../Components/register/Regular_Registeration';
+import Render_Stats from '../../Components/Render_Stats';
+const Register_Candidate_Screen = memo(({navigation}) => {
   const [statsType, setStatsType] = useState(null);
 
-  const Render_Add_btn = ({handleNavigation}) => {
-    return (
+  const {registerListResponse, registerBasicDataResponse} = useSelector(
+    state => state.root.registerData,
+  );
+  const dispatch = useDispatch();
+
+  const handleNavigation = useCallback(() => {
+    navigation.navigate('Add_Registration');
+  }, [navigation]);
+
+  useEffect(() => {
+    dispatch(handleBasicRegisterDetails());
+  }, []);
+
+  console.log('registerListResponse', registerListResponse);
+
+  const Render_Add_btn = useCallback(
+    () => (
       <View style={[styles.addbtn, styles.shadow]}>
         <TouchableOpacity onPress={handleNavigation}>
           <Icon name={'plus'} size={30} color={colors.white} />
         </TouchableOpacity>
       </View>
-    );
-  };
-
-  const Queue_Reg = ({item}) => {
-    return (
-      <Card>
-        <View style={{}}>
-          <View
-            style={[styles.flexRowWithGap, {justifyContent: 'space-between'}]}>
-            <View style={{width: '70%'}}>
-              <Text style={styles.room_num}>{item.name}</Text>
-              <Text style={{color: colors.grey, fontSize: 14}}>8895841585</Text>
-            </View>
-            <View style={{width: '30%', alignItems: 'center'}}>
-              <Text
-                numberOfLines={1}
-                style={[styles.room_num, {color: colors.AppDefaultColor}]}>
-                {item.roomNo}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.flexRowWithGap}>
-            <Text style={{fontSize: 14, color: 'grey'}}>raj@gmail.com</Text>
-          </View>
-          <View
-            style={[
-              styles.flexRowWithGap,
-              {
-                justifyContent: 'flex-end',
-                borderTopWidth: 1,
-                gap: horizontalScale(15),
-                borderTopColor: colors.lightygrey,
-                paddingTop: verticalScale(12),
-              },
-            ]}>
-            <TouchableOpacity>
-              <Icon name={'user-lock'} color={colors.black} size={20} />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Icon name={'user-plus'} color={colors.black} size={20} />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Icon name={'trash-can'} color={colors.red} size={20} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Registartion_View')}>
-              <Icon name={'file-pdf'} color={colors.green} size={20} />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Icon name={'rotate'} color={colors.black} size={20} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Card>
-    );
-  };
-
-  const Old_Registrations = ({item}) => {
-    return (
-      <Card>
-        <View style={{}}>
-          <View
-            style={[styles.flexRowWithGap, {justifyContent: 'space-between'}]}>
-            <View style={{width: '70%'}}>
-              <Text style={styles.room_num}>{item.name}</Text>
-              <Text style={{color: colors.grey, fontSize: 14}}>8895841585</Text>
-            </View>
-            <View style={{width: '30%', alignItems: 'center'}}>
-              <Text
-                numberOfLines={1}
-                style={[styles.room_num, {color: colors.AppDefaultColor}]}>
-                {item.roomNo}
-              </Text>
-              <Text
-                numberOfLines={1}
-                style={[{color: colors.grey, fontSize: 14, width: '100%'}]}>
-                Tenure - 60 Days
-              </Text>
-              <View style={[styles.flexRowWithGap, {gap: 5}]}>
-                <Text style={{fontSize: 14, color: 'grey'}}>Rent:</Text>
-                <Text style={{fontSize: 14, color: 'grey'}}>₹8000</Text>
-              </View>
-            </View>
-          </View>
-          {/* <View> */}
-          <View style={styles.flexRowWithGap}>
-            <Text style={{fontSize: 14, color: 'grey'}}>Room Date:</Text>
-            <Text style={{fontSize: 14, color: 'grey'}}>22/06/2023</Text>
-          </View>
-          <View style={styles.flexRowWithGap}>
-            <Text style={{fontSize: 14, color: 'grey'}}>Leave Date:</Text>
-            <Text style={{fontSize: 14, color: 'grey'}}>20/11/2023</Text>
-          </View>
-          <View style={styles.flexRowWithGap}>
-            <Text style={{fontSize: 14, color: 'grey'}}>
-              Reg No: {item?.seatNo}
-            </Text>
-          </View>
-          <View
-            style={[
-              styles.flexRowWithGap,
-              {width: '100%', justifyContent: 'space-between'},
-            ]}>
-            <Text style={{fontSize: 14, color: 'grey'}}>
-              Seat No: {item?.seatNo}
-            </Text>
-            {/* <View style={styles.flexRowWithGap}> */}
-            <Text style={{fontSize: 14, color: colors.grey}}>
-              Fee: ${item.roomRent}
-            </Text>
-          </View>
-
-          <View
-            style={[
-              styles.flexRowWithGap,
-              {
-                justifyContent: 'flex-end',
-                borderTopWidth: 1,
-                gap: horizontalScale(15),
-                borderTopColor: colors.lightygrey,
-                paddingTop: verticalScale(12),
-              },
-            ]}>
-            <TouchableOpacity>
-              <Icon name={'user-lock'} color={colors.black} size={20} />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Icon name={'user-plus'} color={colors.black} size={20} />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Icon name={'trash-can'} color={colors.red} size={20} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Registartion_View')}>
-              <Icon name={'file-pdf'} color={colors.green} size={20} />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Icon name={'rotate'} color={colors.black} size={20} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Card>
-    );
-  };
-
-  const RenderItem = ({item}) => {
-    return (
-      <View
-        style={{
-          width: width,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-        <ScrollView
-          horizontal={true}
-          pagingEnabled={true}
-          showsHorizontalScrollIndicator={false}>
-          {[1, 1].map(val => {
-            return (
-              <View
-                style={{
-                  width: width,
-                  height: '100%',
-                  paddingHorizontal: horizontalScale(20),
-                  paddingVertical: verticalScale(10),
-                }}>
-                {statsType === 'old_reg' ? (
-                  <Old_Registrations item={item} />
-                ) : statsType === 'queue_reg' ? (
-                  <Queue_Reg item={item} />
-                ) : (
-                  <Card>
-                    <View style={{}}>
-                      <View
-                        style={[
-                          styles.flexRowWithGap,
-                          {justifyContent: 'space-between'},
-                        ]}>
-                        <View style={{width: '70%'}}>
-                          <Text style={styles.room_num}>{item.name}</Text>
-                          <Text style={{color: colors.grey, fontSize: 14}}>
-                            8895841585
-                          </Text>
-                        </View>
-                        <View style={{width: '30%', alignItems: 'center'}}>
-                          <Text
-                            style={[
-                              styles.room_num,
-                              {color: colors.AppDefaultColor},
-                            ]}>
-                            {item.roomNo}
-                          </Text>
-                          <Text style={[{color: colors.grey, fontSize: 14}]}>
-                            Triple sharing
-                          </Text>
-                          <View style={[styles.flexRowWithGap, {gap: 5}]}>
-                            <Text style={{fontSize: 14, color: 'grey'}}>
-                              Rent:
-                            </Text>
-                            <Text style={{fontSize: 14, color: 'grey'}}>
-                              ₹8000
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-                      {/* <View> */}
-                      <View style={styles.flexRowWithGap}>
-                        <Text style={{fontSize: 14, color: 'grey'}}>
-                          Reg Date:
-                        </Text>
-                        <Text style={{fontSize: 14, color: 'grey'}}>
-                          22/11/2023
-                        </Text>
-                      </View>
-                      <View style={styles.flexRowWithGap}>
-                        <Text style={{fontSize: 14, color: 'grey'}}>
-                          Reg No: {item?.seatNo}
-                        </Text>
-                      </View>
-                      <View
-                        style={[
-                          styles.flexRowWithGap,
-                          {width: '100%', justifyContent: 'space-between'},
-                        ]}>
-                        <Text style={{fontSize: 14, color: 'grey'}}>
-                          Seat No: {item?.seatNo}
-                        </Text>
-                        {/* <View style={styles.flexRowWithGap}> */}
-                        <Text style={{fontSize: 14, color: colors.grey}}>
-                          Fee: ${item.roomRent}
-                        </Text>
-                      </View>
-
-                      <View
-                        style={[
-                          styles.flexRowWithGap,
-                          {
-                            justifyContent: 'flex-end',
-                            borderTopWidth: 1,
-                            gap: horizontalScale(15),
-                            borderTopColor: colors.lightygrey,
-                            paddingTop: verticalScale(12),
-                          },
-                        ]}>
-                        <TouchableOpacity>
-                          <Icon
-                            name={'user-lock'}
-                            color={colors.black}
-                            size={20}
-                          />
-                        </TouchableOpacity>
-                        <TouchableOpacity>
-                          <Icon
-                            name={'user-plus'}
-                            color={colors.black}
-                            size={20}
-                          />
-                        </TouchableOpacity>
-                        <TouchableOpacity>
-                          <Icon
-                            name={'trash-can'}
-                            color={colors.red}
-                            size={20}
-                          />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={() =>
-                            navigation.navigate('Registartion_View')
-                          }>
-                          <Icon
-                            name={'file-pdf'}
-                            color={colors.green}
-                            size={20}
-                          />
-                        </TouchableOpacity>
-                        <TouchableOpacity>
-                          <Icon
-                            name={'rotate'}
-                            color={colors.black}
-                            size={20}
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </Card>
-                )}
-              </View>
-            );
-          })}
-        </ScrollView>
-      </View>
-    );
-  };
+    ),
+    [handleNavigation],
+  );
 
   return (
     <View style={styles.container}>
@@ -330,33 +68,30 @@ const Register_Candidate_Screen = ({navigation}) => {
         title={'Register'}
         openDrawer={() => navigation.openDrawer()}
       />
-      <View style={{height: 'auto'}}>
-        <FlatList
-          // ListHeaderComponentStyle={{marginHorizontal: horizontalScale(10)}}
-          ListHeaderComponent={
-            <Render_Stats
-              value={statsType}
-              setValue={setStatsType}
-              data={registrationStats}
-            />
-          }
-          showsVerticalScrollIndicator={false}
-          data={registration}
-          contentContainerStyle={styles.room_section}
-          renderItem={({item}) => {
-            return <RenderItem item={item} />;
-          }}
-          keyExtractor={(item, i) => i.toString()}
-        />
+      <View style={{flex: 1}}>
+        <View style={{width: '100%',paddingHorizontal:horizontalScale(20)}}>
+          <Render_Stats
+            value={statsType}
+            setValue={setStatsType}
+            data={registerBasicDataResponse?.response}
+          />
+        </View>
+        <>
+          {statsType === 'Old Registration' ? (
+            <Old_Registrations />
+          ) : statsType === 'Registration Queue' ? (
+            <Queue_Registration />
+          ) : (
+            <Regular_Registeration />
+          )}
+        </>
       </View>
-      <Render_Add_btn
-        handleNavigation={() => navigation.navigate('Add_Registration')}
-      />
+      <Render_Add_btn />
     </View>
   );
-};
+});
 
-export default Register_Candidate_Screen;
+export default memo(Register_Candidate_Screen);
 
 const styles = StyleSheet.create({
   container: {
@@ -419,141 +154,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.red,
     borderRadius: horizontalScale(5),
   },
-  room_type: {},
-  seats_view: {},
-  rent: {},
-});
-=======
-import {
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import React, {useRef, useState} from 'react';
-import Icon from 'react-native-vector-icons//FontAwesome6';
-import {colors} from '../../Utils/Colors';
-import Header from '../../Components/headers/Header';
-import {horizontalScale, verticalScale, width} from '../../Utils/Metrics';
-import {ThemeContext} from '../../Utils/Theme';
-import Card from '../../Components/cards/Card';
-import {fontSize} from '../../Utils/Size';
-import {Old_registration_list, registration, registrationStats} from '../../Utils/constants';
-import Render_Stats from '../../Components/Render_Stats';
-import Old_registration from '../../Components/Old_registration';
-import Regular_Registration from '../../Components/Regular_Registration';
-
-const Register_Candidate_Screen = ({navigation}) => {
-  const [selected, setSelected] = useState(null);
-  console.log('selected',selected);
-  const Render_Add_btn = ({handleNavigation}) => {
-    return (
-      <View style={[styles.addbtn, styles.shadow]}>
-        <TouchableOpacity onPress={handleNavigation}>
-          <Icon name={'plus'} size={30} color={colors.white} />
-        </TouchableOpacity>
-      </View>
-    );
-  };
-  const RenderItem = () => {
-    return <View></View>;
-  };
-
-  return (
-    <View style={styles.container}>
-      <Header title={'Registration'} path={() => navigation.goBack()} />
-      <View style={{height: 'auto'}}>
-        <Render_Stats
-          selected={selected}
-          setSelected={setSelected}
-          data={registrationStats}
-        />
-        {
-          selected==='old_reg'?
-          <Old_registration data={Old_registration_list} />:
-          <Regular_Registration data={registration}/>
-        }
-        
-      </View>
-      <Render_Add_btn
-        handleNavigation={() => navigation.navigate('Add_Registration')}
-      />
-    </View>
-  );
-};
-
-export default Register_Candidate_Screen;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  qtyView: {
-    padding: 5,
-    backgroundColor: `${colors.orange}50`,
-    borderRadius: 5,
-  },
-  flexRowWithGap: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    marginVertical: 2,
-  },
-  stats_setion: {
-    flexDirection: 'row',
-    // height: verticalScale(170),
-    backgroundColor: colors.white,
-    gap: horizontalScale(12),
-    alignItems: 'center',
-  },
-  room_section: {
-    backgroundColor: colors.white,
-    padding: horizontalScale(20),
-    gap: horizontalScale(12),
-    paddingBottom: verticalScale(100),
-  },
-  addbtn: {
-    height: verticalScale(60),
-    width: verticalScale(60),
-    borderRadius: horizontalScale(50),
-    backgroundColor: colors.AppDefaultColor,
+  scrollBtn: {
     position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-    bottom: verticalScale(20),
-    right: horizontalScale(20),
-  },
-  shadow: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 5,
-    },
-    shadowOpacity: 0.34,
-    shadowRadius: 6.27,
-    elevation: 10,
-  },
-  room_num: {
-    fontSize: 24,
-    color: colors.black,
-  },
-  btn: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: verticalScale(40),
-    paddingHorizontal: horizontalScale(20),
-    backgroundColor: colors.red,
-    borderRadius: horizontalScale(5),
-  },
-  label: {
-    fontSize: fontSize.lable,
-    // fontWeight:'600',
-    color: colors.grey,
+    verticalAlign: 'middle',
   },
   room_type: {},
   seats_view: {},
   rent: {},
 });
->>>>>>> main

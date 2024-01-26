@@ -6,6 +6,8 @@ export const styles = StyleSheet.create({
   Container: {
     flex: 1,
     backgroundColor: colors.AppDefaultColor,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   txt: {
     textAlign: 'center',

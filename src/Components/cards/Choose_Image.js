@@ -1,5 +1,11 @@
-<<<<<<< HEAD
-import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Pressable,
+  Image,
+} from 'react-native';
 import React from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import {
@@ -8,17 +14,29 @@ import {
   verticalScale,
 } from '../../Utils/Metrics';
 import {colors} from '../../Utils/Colors';
+import {PickImage, RemoveImage} from '../../Hooks/useImagePicker';
 
-const Choose_Image = ({title}) => {
+const Choose_Image = ({title, setImageUrl, imageUrl}) => {
   return (
-    <View style={styles.container}>
+    <TouchableOpacity
+      onPress={() => PickImage(setImageUrl)}
+      style={styles.container}>
       <Text>{title}</Text>
       <View style={styles.box}>
-        <TouchableOpacity style={styles.addBtn}>
-          <Icon name={'plus'} size={20} color={colors.white} />
-        </TouchableOpacity>
+        {imageUrl ? (
+          <>
+            <Image source={{uri: imageUrl}} style={styles.image} />
+            <TouchableOpacity onPress={() => RemoveImage(imageUrl,setImageUrl)} style={styles.closeButton}>
+              <Icon name={'xmark'} size={15} color={colors.white} />
+            </TouchableOpacity>
+          </>
+        ) : (
+          <TouchableOpacity onPress={() => PickImage(setImageUrl)} style={styles.addBtn}>
+            <Icon name={'plus'} size={20} color={colors.white} />
+          </TouchableOpacity>
+        )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -50,88 +68,20 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(16),
     color: colors.black,
   },
-});
-=======
-import {StyleSheet, TouchableOpacity, Text, View, Image} from 'react-native';
-import React from 'react';
-import {colors} from '../../Utils/Colors';
-import {horizontalScale, verticalScale} from '../../Utils/Metrics';
-import Icon from 'react-native-vector-icons/FontAwesome6';
-import {fontSize} from '../../Utils/Size';
-import ImageCropPicker from 'react-native-image-crop-picker';
-const Choose_Image = ({title, image, handlePress, setImage}) => {
-  const AddPhotoBtn = () => {
-    return (
-      <View style={styles.addphotoBtn}>
-        <Icon name="plus" size={15} color={colors.white} />
-      </View>
-    );
-  };
-
-  return (
-    <View style={{width: '45%', gap: verticalScale(10)}}>
-      <Text style={styles.labelText}>{title && title}</Text>
-      <TouchableOpacity
-        disabled={!handlePress && true}
-        onPress={() => {handlePress(setImage)}}
-        style={styles.chip}>
-        {image ? (
-          <>
-            <Image source={{uri: image}} style={styles.uploadedimage} />
-            <TouchableOpacity onPress={()=>setImage('')} style={styles.removeImg}>
-              <Icon name={'xmark'} color={colors.white} size={16} />
-            </TouchableOpacity>
-          </>
-        ) : (
-          <AddPhotoBtn />
-        )}
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-export default Choose_Image;
-
-const styles = StyleSheet.create({
-  chip: {
-    backgroundColor: colors.white,
-    height: verticalScale(250),
-    width: '100%',
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderRadius: 5,
-    borderColor: colors.grey,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  uploadedimage: {
+  image: {
     height: '100%',
     width: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
-  addphotoBtn: {
-    height: 35,
-    width: 35,
-    borderRadius: 35,
-    backgroundColor: colors.AppDefaultColor,
+  closeButton: {
+    height: verticalScale(25),
+    width: verticalScale(25),
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  labelText: {
-    fontSize: fontSize.lable,
-    color: colors.txtgrey,
-    lineHeight: 20,
-  },
-  removeImg: {
-    height: horizontalScale(20),
-    width: horizontalScale(20),
     borderRadius: horizontalScale(30),
+    backgroundColor:colors.red,
     position: 'absolute',
-    right: horizontalScale(-8),
-    top: verticalScale(-10),
-    backgroundColor: colors.red,
-    justifyContent: 'center',
-    alignItems: 'center',
+    right: verticalScale(-5),
+    top: verticalScale(-8),
   },
 });
->>>>>>> main

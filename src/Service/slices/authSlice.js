@@ -1,7 +1,15 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import axios from 'axios';
 import BASE_URL from '../../Utils/config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
+const INITIAL_STATE = {
+  loginResponse: null,
+  error: null,
+  loading: false,
+  userData:[]
+};
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async ({userType, businessName, username, password}, {rejectWithValue}) => {
@@ -12,9 +20,11 @@ export const loginUser = createAsyncThunk(
         businessName,
         username,
         password,
-      },{headers:{"Content-Type":'application/x-www-form-urlencoded'}});
+      });
       console.log('response:', response.data);
-      return response.data;
+      
+
+      return response?.data;
     } catch (error) {
       console.log('Error:', error);
       return rejectWithValue(error.response.data);
@@ -24,14 +34,13 @@ export const loginUser = createAsyncThunk(
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState: {
-    userType: null,
-    permission: null,
-    token: null,
-    loading: false,
-    error: null,
+  initialState: INITIAL_STATE,
+
+  reducers: {
+    setUserData:(state,action)=>{
+      state.userData = action.payload
+    }
   },
-  reducers: {},
   extraReducers: builder => {
     builder
       .addCase(loginUser.pending, state => {
@@ -40,17 +49,16 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         console.log('action', action);
-        state.loading = false;
-        state.userType = action.payload.data.userType;
-        state.permission = action.payload.data.permission;
-        state.token = action.payload.data.token;
+        state.loading = false;  
+        state.error = null;
+        state.loginResponse = action?.payload;
       })
       .addCase(loginUser.rejected, (state, action) => {
         console.log('action Rejected', action);
         state.loading = false;
-        state.error = action.payload ? action.payload.error : 'Login failed';
+        state.error = action?.payload?.error ? action.payload.error : 'Something went wrong';
       });
   },
 });
-
+export const {setUserData} = authSlice.actions
 export default authSlice.reducer;
